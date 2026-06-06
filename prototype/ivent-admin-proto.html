@@ -284,7 +284,7 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
 }
 .ev-inv-wrap {
   flex: 1.4; border-radius: 12px; overflow: hidden;
-  box-shadow: 0 8px 24px rgba(42,31,26,0.13);
+  box-shadow: 0 12px 40px rgba(42,31,26,0.28), 0 2px 8px rgba(42,31,26,0.12);
   background: var(--ev-kraft);
   min-height: 260px;
   display: flex; align-items: center; justify-content: center;
@@ -311,8 +311,8 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
 .ev-right { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 
 .ev-nav-item {
-  background: var(--ev-surface); border: none;
-  border-radius: 12px; padding: 10px 11px;
+  background: transparent; border: none;
+  border-radius: 0; padding: 6px 4px;
   display: flex; align-items: center; gap: 9px;
   cursor: pointer; transition: transform .1s;
 }
@@ -509,16 +509,16 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
 /* QR placeholder */
 /* QR — limpio, fondo surface, QR centrado */
 .ev-qr-block {
-  width: 100%; border-radius: 16px; overflow: hidden;
-  background: var(--ev-surface2);
+  width: 100%;
+  background: transparent;
   display: flex; flex-direction: column; align-items: center;
-  padding: 20px 16px 18px; gap: 10px;
+  padding: 8px 0 4px; gap: 8px;
 }
 .ev-qr-square {
   width: 140px; height: 140px;
-  border-radius: 10px; background: #fff;
+  border-radius: 0; background: transparent;
   display: flex; align-items: center; justify-content: center;
-  padding: 10px; position: relative; overflow: hidden;
+  padding: 0; position: relative; overflow: hidden;
   flex-shrink: 0;
 }
 .ev-qr-pattern {
@@ -547,7 +547,7 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
   <div class="topnav-event">Panel de configuración · evento</div>
   <div class="topnav-spacer"></div>
   <div class="badge-live">Preview en vivo</div>
-  <div style="background:#F5C518;color:#1A1410;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;">v 2026-06-06 02:11 UTC</div>
+  <div style="background:#F5C518;color:#1A1410;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;">v 2026-06-06 03:18 UTC</div>
 </nav>
 
 <div class="main">
@@ -610,11 +610,29 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
           <span class="tab-label">QR</span>
           <span class="tab-dot"></span>
         </button>
-        <button class="img-tab" id="img-tab-otra" onclick="switchImgTab('otra')">
-          <span class="tab-icon">➕</span>
-          <span class="tab-label">Otra</span>
+        <button class="img-tab" id="img-tab-fondo" onclick="switchImgTab('fondo')">
+          <span class="tab-icon">🎨</span>
+          <span class="tab-label">Fondo</span>
           <span class="tab-dot"></span>
         </button>
+      </div>
+
+      <!-- Fondo panel — pattern picker -->
+      <div id="fondo-panel" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;color:var(--admin-mute);margin-bottom:2px;">Elige un fondo para la pantalla del invitado</div>
+        <div id="fondo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+        <!-- Upload propio fondo -->
+        <div style="position:relative;border:1.5px dashed var(--admin-border);border-radius:var(--radius);padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:10px;" id="fondo-upload-zone" onmouseover="this.style.borderColor='var(--admin-accent)';this.style.background='var(--admin-accent-light)'" onmouseout="this.style.borderColor='var(--admin-border)';this.style.background='transparent'">
+          <input type="file" id="f-fondo-input" accept="image/jpeg,image/png,image/webp" onchange="handleFondoUpload(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+          <span style="font-size:18px;">🖼</span>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--admin-text);">Subir mi propio fondo</div>
+            <div style="font-size:10px;color:var(--admin-mute);margin-top:2px;">JPG · PNG · WebP &nbsp;·&nbsp; mín. 1080×1920px &nbsp;·&nbsp; máx. 5MB</div>
+          </div>
+        </div>
+        <div id="fondo-upload-tip" style="display:none;font-size:10px;color:var(--admin-mute);padding:6px 10px;background:rgba(196,151,58,0.08);border-radius:6px;border-left:2px solid rgba(196,151,58,0.35);line-height:1.5;">
+          💡 Usa una imagen vertical (formato retrato). Evita texto o detalles finos — el contenido del evento se superpone encima.
+        </div>
       </div>
 
       <!-- Upload zone (shared) -->
@@ -649,10 +667,7 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
           <img class="img-thumb" id="thumb-qr" src="" alt="QR">
           <div class="img-thumb-label">QR</div>
         </div>
-        <div class="img-thumb-wrap" id="thumb-wrap-otra">
-          <img class="img-thumb" id="thumb-otra" src="" alt="Otra">
-          <div class="img-thumb-label">Otra</div>
-        </div>
+
       </div>
     </div>
 
@@ -1501,36 +1516,44 @@ const IMG_TYPES = {
     tip: '💡 Genera tu QR en qr.io o qr-code-generator.com',
     resizeIcon: '⊞', resizeMin: 80, resizeMax: 200, resizeDefault: 140, resizeUnit: 'px',
   },
-  otra: {
-    icon: '➕', title: 'Subir otra imagen', sub: 'PNG · JPG · SVG',
-    tip: null, resizeIcon: '⊞', resizeMin: 40, resizeMax: 200, resizeDefault: 100, resizeUnit: 'px',
-  },
+
 };
 
 let currentImgTab = 'logo';
-const imgStore = { logo: null, invitacion: null, qr: null, otra: null };
-const imgSizes = { logo: 52, invitacion: 140, qr: 80, otra: 100 };
+const imgStore = { logo: null, invitacion: null, qr: null };
+const imgSizes = { logo: 52, invitacion: 140, qr: 80 };
 
 function switchImgTab(type) {
   currentImgTab = type;
-  const cfg = IMG_TYPES[type];
-  // Update tabs
-  Object.keys(IMG_TYPES).forEach(t => {
+  // Update all tab buttons
+  ['logo','invitacion','qr','fondo'].forEach(t => {
     document.getElementById('img-tab-' + t)?.classList.toggle('active', t === type);
   });
-  // Update upload zone
+
+  const fondoPanel = document.getElementById('fondo-panel');
+  const uploadZone = document.getElementById('img-upload-zone');
+  const resizeRow  = document.getElementById('img-resize-row');
+
+  if (type === 'fondo') {
+    fondoPanel.style.display = 'flex';
+    uploadZone.style.display = 'none';
+    resizeRow.classList.remove('visible');
+    return;
+  }
+
+  fondoPanel.style.display = 'none';
+  uploadZone.style.display = '';
+
+  const cfg = IMG_TYPES[type];
   document.getElementById('img-zone-icon').textContent = cfg.icon;
   document.getElementById('img-zone-title').textContent = cfg.title;
   document.getElementById('img-zone-sub').textContent = cfg.sub;
   const tipEl = document.getElementById('img-zone-tip');
   if (cfg.tip) { tipEl.textContent = cfg.tip; tipEl.style.display = ''; }
   else { tipEl.style.display = 'none'; }
-  // Update upload zone state
   const zone = document.getElementById('img-upload-zone');
   zone.classList.toggle('has-image', !!imgStore[type]);
-  // Reset file input
   document.getElementById('f-img-input').value = '';
-  // Update slider
   const sz = imgSizes[type];
   const sl = document.getElementById('img-size-slider');
   sl.min = cfg.resizeMin; sl.max = cfg.resizeMax; sl.value = sz;
@@ -1538,7 +1561,6 @@ function switchImgTab(type) {
   const label = cfg.resizeUnit === 'px' ? sz + 'px' : sizeLabel(type, sz);
   document.getElementById('img-size-val').textContent = label;
   updateSliderTrack('img-size-slider');
-  const resizeRow = document.getElementById('img-resize-row');
   resizeRow.classList.toggle('visible', !!imgStore[type]);
 }
 
@@ -1708,8 +1730,82 @@ document.addEventListener('click', () => {
   if (openFontPicker) closeFontPicker(openFontPicker);
 });
 
+
+// ── FONDO PATTERNS ──
+const FONDO_PATTERNS = [
+  { id:'limpio',      label:'Limpio',      preview:'background:#FAF7F2;',
+    css:'background:#FAF7F2;' },
+  { id:'lino',        label:'Lino',        preview:'background-color:#EDE8DF;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 5px);',
+    css:'background-color:#EDE8DF;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 5px);' },
+  { id:'kraft',       label:'Kraft',       preview:'background-color:#E8D9BE;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 8px);',
+    css:'background-color:#E8D9BE;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 8px);' },
+  { id:'marmol',      label:'Mármol',      preview:'background-color:#F4F2F0;background-image:repeating-linear-gradient(125deg,rgba(180,170,160,0.15) 0px,transparent 2px,transparent 10px,rgba(180,170,160,0.08) 12px);',
+    css:'background-color:#F4F2F0;background-image:repeating-linear-gradient(125deg,rgba(180,170,160,0.15) 0px,transparent 2px,transparent 10px,rgba(180,170,160,0.08) 12px);' },
+  { id:'acuarela',    label:'Acuarela',    preview:'background:radial-gradient(ellipse at 20% 20%,rgba(196,151,58,0.1) 0%,transparent 55%),radial-gradient(ellipse at 80% 80%,rgba(125,41,53,0.08) 0%,transparent 55%),#FAF7F2;',
+    css:'background:radial-gradient(ellipse at 20% 20%,rgba(196,151,58,0.1) 0%,transparent 55%),radial-gradient(ellipse at 80% 80%,rgba(125,41,53,0.08) 0%,transparent 55%),#FAF7F2;' },
+  { id:'cuadricula',  label:'Cuadrícula',  preview:'background-color:#F8F6F2;background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);background-size:20px 20px;',
+    css:'background-color:#F8F6F2;background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);background-size:20px 20px;' },
+  { id:'puntos',      label:'Puntos',      preview:'background-color:#FAF7F2;background-image:radial-gradient(circle,rgba(0,0,0,0.1) 1px,transparent 1px);background-size:16px 16px;',
+    css:'background-color:#FAF7F2;background-image:radial-gradient(circle,rgba(0,0,0,0.1) 1px,transparent 1px);background-size:16px 16px;' },
+  { id:'noche',       label:'Noche',       preview:'background:linear-gradient(160deg,#1a1530 0%,#0e1020 100%);',
+    css:'background:linear-gradient(160deg,#1a1530 0%,#0e1020 100%);' },
+];
+
+let selectedFondo = 'limpio';
+
+function initFondoPanel() {
+  const grid = document.getElementById('fondo-grid');
+  if (!grid) return;
+  grid.innerHTML = FONDO_PATTERNS.map(p => `
+    <div onclick="selectFondo('${p.id}')" id="fondo-opt-${p.id}"
+      style="border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid ${p.id===selectedFondo?'var(--admin-accent)':'transparent'};transition:border-color .15s,transform .1s;aspect-ratio:1;position:relative;">
+      <div style="width:100%;height:100%;${p.preview}"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;font-size:8px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,0.9);text-align:center;padding:3px 2px;background:rgba(0,0,0,0.35);">${p.label}</div>
+    </div>
+  `).join('');
+}
+
+function selectFondo(id) {
+  selectedFondo = id;
+  document.querySelectorAll('[id^="fondo-opt-"]').forEach(el => {
+    el.style.borderColor = el.id === 'fondo-opt-' + id ? 'var(--admin-accent)' : 'transparent';
+  });
+  const p = FONDO_PATTERNS.find(x => x.id === id);
+  if (!p) return;
+  const page = document.getElementById('event-preview');
+  if (!page) return;
+  ['background','backgroundColor','backgroundImage','backgroundSize','backgroundPosition'].forEach(pr => page.style.removeProperty(pr));
+  const tmp = document.createElement('div');
+  tmp.setAttribute('style', p.css);
+  ['background','backgroundColor','backgroundImage','backgroundSize','backgroundPosition'].forEach(pr => {
+    if (tmp.style[pr]) page.style[pr] = tmp.style[pr];
+  });
+  document.getElementById('img-tab-fondo')?.classList.toggle('has-image', id !== 'limpio');
+}
+
+
+function handleFondoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const page = document.getElementById('event-preview');
+  if (!page) return;
+  // Clear CSS patterns first
+  ['background','backgroundColor','backgroundImage','backgroundSize','backgroundPosition'].forEach(pr => page.style.removeProperty(pr));
+  page.style.backgroundImage = `url('${url}')`;
+  page.style.backgroundSize = 'cover';
+  page.style.backgroundPosition = 'center';
+  // Deselect all pattern options
+  document.querySelectorAll('[id^="fondo-opt-"]').forEach(el => el.style.borderColor = 'transparent');
+  selectedFondo = 'custom';
+  document.getElementById('img-tab-fondo')?.classList.add('has-image');
+  // Show tip
+  document.getElementById('fondo-upload-tip').style.display = 'block';
+}
+
 // Init
 updatePreview();
+initFondoPanel();
 initFontSelector();
 renderQRPlaceholder();
 </script>
