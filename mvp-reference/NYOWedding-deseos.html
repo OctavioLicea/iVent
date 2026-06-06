@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escríbenos algo · Nydia & Octavio</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#7D2935;--rose-light:#F3E8EA;--rose-dark:#561820;--rose-mid:#A34455;
+  --gold:#9C6B2E;--gold-light:#F7F0E3;--gold-mid:#C4973A;
+  --kraft:#EDE0CB;--ink:#2A1F1A;--ink-soft:#5C4A3A;--ink-mute:#9C8878;
+  --surface:#FAF7F2;--surface2:#F2EBE0;
+  --border:rgba(90,50,30,0.10);--border-strong:rgba(90,50,30,0.22);
+  --radius:10px;--radius-lg:16px;
+  --font-display:"Great Vibes",cursive;
+  --font-heading:"Cormorant Garamond",serif;
+  --font-body:"DM Sans",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--font-body);background:var(--surface);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
+
+/* Top bar */
+.top-bar{width:100%;display:flex;align-items:center;padding:14px 16px;gap:10px;border-bottom:0.5px solid var(--border)}
+.home-btn{display:flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:13px;font-family:var(--font-body);text-decoration:none;padding:6px 10px;border-radius:20px;background:var(--surface2);border:0.5px solid var(--border-strong);transition:background .15s}
+.home-btn:hover{background:var(--rose-light)}
+.home-btn svg{width:13px;height:13px;fill:currentColor}
+.top-bar-title{font-family:var(--font-heading);font-size:17px;font-weight:600;color:var(--ink);flex:1;text-align:center}
+.top-bar-space{width:72px}
+
+/* Hero */
+.hero{text-align:center;padding:36px 24px 24px;animation:fadeDown .5s ease both}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.hero-names{font-family:var(--font-display);font-size:62px;color:var(--rose-dark);line-height:1;margin-bottom:8px}
+.hero-sub{font-family:var(--font-heading);font-size:16px;color:var(--ink-soft);font-style:italic;line-height:1.5}
+
+/* Card */
+.card{width:100%;max-width:560px;padding:0 16px;animation:fadeUp .5s .1s ease both}
+
+.form-card{background:#fff;border:0.5px solid var(--border-strong);border-radius:var(--radius-lg);padding:24px;box-shadow:0 4px 24px rgba(42,31,26,.08);margin-bottom:20px}
+
+.form-label{font-family:var(--font-heading);font-size:13px;font-weight:600;color:var(--ink-mute);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;display:block}
+
+.form-textarea{
+  width:100%;min-height:140px;resize:vertical;
+  font-family:var(--font-body);font-size:15px;color:var(--ink);
+  background:var(--surface);border:0.5px solid var(--border-strong);
+  border-radius:var(--radius);padding:12px 14px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  line-height:1.6;
+}
+.form-textarea:focus{border-color:var(--rose-mid);box-shadow:0 0 0 3px rgba(125,41,53,.08)}
+.form-textarea::placeholder{color:var(--ink-mute);font-style:italic}
+
+.form-name{
+  width:100%;margin-top:12px;
+  font-family:var(--font-body);font-size:15px;color:var(--ink);
+  background:var(--surface);border:0.5px solid var(--border-strong);
+  border-radius:var(--radius);padding:11px 14px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.form-name:focus{border-color:var(--rose-mid);box-shadow:0 0 0 3px rgba(125,41,53,.08)}
+.form-name::placeholder{color:var(--ink-mute)}
+
+.char-count{font-size:11px;color:var(--ink-mute);text-align:right;margin-top:4px}
+
+.btn-enviar{
+  width:100%;margin-top:18px;
+  background:var(--rose-dark);color:#fff;
+  font-family:var(--font-heading);font-size:18px;font-weight:600;letter-spacing:.03em;
+  padding:14px 24px;border-radius:var(--radius-lg);border:none;cursor:pointer;
+  box-shadow:0 3px 16px rgba(86,24,32,.22);
+  transition:background .15s,transform .12s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-enviar:hover{background:var(--rose-mid);transform:translateY(-1px)}
+.btn-enviar:active{transform:scale(.98)}
+.btn-enviar:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* Estado enviado */
+.success-card{
+  background:#fff;border:0.5px solid var(--border-strong);border-radius:var(--radius-lg);
+  padding:40px 24px;box-shadow:0 4px 24px rgba(42,31,26,.08);
+  text-align:center;display:none;animation:fadeUp .4s ease both;
+}
+.success-icon{font-size:48px;margin-bottom:16px}
+.success-title{font-family:var(--font-display);font-size:42px;color:var(--rose-dark);margin-bottom:8px}
+.success-sub{font-family:var(--font-heading);font-size:16px;color:var(--ink-soft);font-style:italic;line-height:1.6}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;
+  font-size:13px;font-family:var(--font-body);
+  transition:transform .3s,opacity .3s;opacity:0;z-index:999;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{background:var(--rose-dark)}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="home-btn" href="index.html">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Inicio
+  </a>
+  <div class="top-bar-title">Un mensaje para nosotros</div>
+  <div class="top-bar-space"></div>
+</div>
+
+<div class="hero">
+  <div class="hero-names">Nydia & Octavio</div>
+  <div class="hero-sub">Deja tus palabras para este día especial.<br>Las guardaremos para siempre. 💌</div>
+</div>
+
+<div class="card">
+  <!-- Formulario -->
+  <div class="form-card" id="form-wrap">
+    <label class="form-label" for="msg">Tu mensaje</label>
+    <textarea class="form-textarea" id="msg" maxlength="500" placeholder="Escribe lo que sientes, un deseo, un recuerdo... lo que quieras decirnos."></textarea>
+    <div class="char-count"><span id="char-num">0</span> / 500</div>
+
+    <label class="form-label" style="margin-top:16px" for="nombre">Tu nombre <span style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+    <input class="form-name" id="nombre" type="text" maxlength="80" placeholder="¿Cómo te llamas?">
+
+    <button class="btn-enviar" id="btn-enviar" onclick="enviar()">
+      💌 Enviar mensaje
+    </button>
+  </div>
+
+  <!-- Confirmación -->
+  <div class="success-card" id="success-card">
+    <div class="success-icon">💍</div>
+    <div class="success-title">¡Gracias!</div>
+    <div class="success-sub">Tu mensaje ya está guardado.<br>Nydia y Octavio lo leerán con mucho cariño.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = "https://qoaxifnrlxxwwdzqxmot.supabase.co";
+const SB_KEY = "sb_publishable_P72GEsWtoUAfqiAev-oFig_SOs1cdwv";
+const sbH = {"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
+
+const msgEl    = document.getElementById("msg");
+const nombreEl = document.getElementById("nombre");
+const btnEl    = document.getElementById("btn-enviar");
+const charEl   = document.getElementById("char-num");
+
+msgEl.addEventListener("input", () => {
+  charEl.textContent = msgEl.value.length;
+});
+
+function showToast(txt, tipo = "ok") {
+  const t = document.getElementById("toast");
+  t.textContent = txt;
+  t.className = "toast" + (tipo === "err" ? " err" : "");
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+async function enviar() {
+  const mensaje = msgEl.value.trim();
+  if (!mensaje) { showToast("Escribe algo primero 😊", "err"); return; }
+
+  btnEl.disabled = true;
+  btnEl.textContent = "Enviando...";
+
+  const body = { mensaje, nombre: nombreEl.value.trim() || null };
+
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/deseos`, {
+      method: "POST",
+      headers: { ...sbH, "Prefer": "return=minimal" },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+
+    document.getElementById("form-wrap").style.display = "none";
+    const s = document.getElementById("success-card");
+    s.style.display = "block";
+  } catch(e) {
+    console.error(e);
+    showToast("Algo falló, intenta de nuevo", "err");
+    btnEl.disabled = false;
+    btnEl.innerHTML = "💌 Enviar mensaje";
+  }
+}
+</script>
+</body>
+</html>

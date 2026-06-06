@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menú · Nydia & Octavio</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#7D2935;--rose-light:#F3E8EA;--rose-dark:#561820;--rose-mid:#A34455;
+  --sage:#6B8F71;--sage-light:#EBF0E8;--sage-dark:#3D5C42;
+  --gold:#9C6B2E;--gold-light:#F7F0E3;--gold-mid:#C4973A;
+  --kraft:#EDE0CB;--ink:#2A1F1A;--ink-soft:#5C4A3A;--ink-mute:#9C8878;
+  --surface:#FAF7F2;--surface2:#F2EBE0;
+  --border:rgba(90,50,30,0.10);--border-strong:rgba(90,50,30,0.22);
+  --radius:10px;--radius-lg:16px;
+  --font-display:"Great Vibes",cursive;
+  --font-heading:"Cormorant Garamond",serif;
+  --font-body:"DM Sans",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--font-body);background:var(--surface);color:var(--ink);min-height:100vh}
+
+.top-bar{width:100%;display:flex;align-items:center;padding:14px 20px;border-bottom:0.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:20;gap:12px}
+.home-btn{display:flex;align-items:center;gap:7px;background:var(--surface2);border:0.5px solid var(--border-strong);border-radius:30px;padding:7px 14px;font-family:var(--font-heading);font-size:15px;color:var(--ink-soft);text-decoration:none;transition:background .15s,color .15s;flex-shrink:0}
+.home-btn:hover{background:var(--rose-light);color:var(--rose-dark)}
+.home-btn svg{width:14px;height:14px;fill:currentColor}
+.top-bar-title{flex:1;font-family:var(--font-heading);font-size:17px;color:var(--ink-mute);text-align:center}
+.top-bar-space{width:90px;flex-shrink:0}
+
+.page-wrap{max-width:680px;margin:0 auto;padding:28px 20px 60px}
+.page-header{text-align:center;margin-bottom:36px}
+.page-display{font-family:var(--font-display);font-size:56px;color:var(--rose-dark);line-height:1;margin-bottom:6px}
+.page-sub{font-family:var(--font-heading);font-size:14px;color:var(--ink-mute);letter-spacing:.08em}
+
+.menu-section{margin-bottom:32px}
+.menu-section-title{font-family:var(--font-heading);font-size:22px;font-weight:500;color:var(--rose-dark);margin-bottom:14px;padding-bottom:8px;border-bottom:0.5px solid var(--border-strong);display:flex;align-items:center;gap:8px}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-card{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:var(--radius-lg);padding:16px 18px;transition:border-color .15s}
+.menu-card:hover{border-color:var(--rose-mid)}
+.menu-card-icon{font-size:22px;margin-bottom:8px}
+.menu-card-name{font-family:var(--font-heading);font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.menu-card-desc{font-size:12px;color:var(--ink-mute);line-height:1.5}
+.menu-card.highlight{background:var(--kraft);border-color:var(--gold-mid)}
+.menu-card.highlight .menu-card-name{color:var(--rose-dark)}
+
+.bebidas-section{margin-bottom:32px}
+.beb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.beb-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;text-align:center}
+.beb-icon{font-size:28px;margin-bottom:6px}
+.beb-name{font-family:var(--font-heading);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.beb-desc{font-size:11px;color:var(--ink-mute);line-height:1.4}
+
+.nota-card{background:var(--rose-light);border:0.5px solid rgba(125,41,53,.2);border-radius:var(--radius-lg);padding:18px 20px;text-align:center;margin-top:20px}
+.nota-card p{font-family:var(--font-heading);font-style:italic;font-size:15px;color:var(--rose-dark);line-height:1.6}
+
+@media(max-width:500px){.menu-grid{grid-template-columns:1fr}.beb-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="home-btn" href="index.html">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Inicio
+  </a>
+  <div class="top-bar-title">Menú & Bebidas</div>
+  <div class="top-bar-space"></div>
+</div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-display">Menú de la noche</div>
+    <div class="page-sub">Viernes 29 de Mayo · Quinta Arreboleda</div>
+  </div>
+
+  <!-- Cena -->
+  <div class="menu-section">
+    <div class="menu-section-title">🍽 Cena</div>
+    <div class="menu-grid">
+      <div class="menu-card highlight">
+        <div class="menu-card-icon">🥗</div>
+        <div class="menu-card-name">Entrada</div>
+        <div class="menu-card-desc">Por confirmar con catering</div>
+      </div>
+      <div class="menu-card highlight">
+        <div class="menu-card-icon">🍖</div>
+        <div class="menu-card-name">Plato fuerte</div>
+        <div class="menu-card-desc">Por confirmar con catering</div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-icon">🥦</div>
+        <div class="menu-card-name">Opción vegetariana</div>
+        <div class="menu-card-desc">Disponible bajo solicitud</div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-icon">🍰</div>
+        <div class="menu-card-name">Postre</div>
+        <div class="menu-card-desc">Pastel de bodas y mini postres</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cóctel de bienvenida -->
+  <div class="menu-section">
+    <div class="menu-section-title">🥂 Cóctel de bienvenida</div>
+    <div class="menu-grid">
+      <div class="menu-card">
+        <div class="menu-card-icon">🍹</div>
+        <div class="menu-card-name">Signature drink</div>
+        <div class="menu-card-desc">Cóctel especial de los novios</div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-icon">🧀</div>
+        <div class="menu-card-name">Charcutería</div>
+        <div class="menu-card-desc">Tabla de quesos y embutidos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estaciones -->
+  <div class="menu-section">
+    <div class="menu-section-title">🌮 Estaciones de noche</div>
+    <div class="menu-grid">
+      <div class="menu-card">
+        <div class="menu-card-icon">🌮</div>
+        <div class="menu-card-name">Estación de tacos</div>
+        <div class="menu-card-desc">Carnitas · Asada · Adobada · Guisado</div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-icon">🍬</div>
+        <div class="menu-card-name">Candy bar</div>
+        <div class="menu-card-desc">Mesa de dulces y recuerdos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bebidas -->
+  <div class="bebidas-section">
+    <div class="menu-section-title">🍷 Barra libre</div>
+    <div class="beb-grid">
+      <div class="beb-card">
+        <div class="beb-icon">🍷</div>
+        <div class="beb-name">Vino</div>
+        <div class="beb-desc">Tinto · Blanco · Rosé</div>
+      </div>
+      <div class="beb-card">
+        <div class="beb-icon">🍺</div>
+        <div class="beb-name">Cerveza</div>
+        <div class="beb-desc">Nacional e importada</div>
+      </div>
+      <div class="beb-card">
+        <div class="beb-icon">🥃</div>
+        <div class="beb-name">Destilados</div>
+        <div class="beb-desc">Whisky · Vodka · Ron · Tequila</div>
+      </div>
+      <div class="beb-card">
+        <div class="beb-icon">🍹</div>
+        <div class="beb-name">Cócteles</div>
+        <div class="beb-desc">Mezclados y tragos cortos</div>
+      </div>
+      <div class="beb-card">
+        <div class="beb-icon">💧</div>
+        <div class="beb-name">Sin alcohol</div>
+        <div class="beb-desc">Aguas frescas · Refrescos · Jugos</div>
+      </div>
+      <div class="beb-card">
+        <div class="beb-icon">☕</div>
+        <div class="beb-name">Café & té</div>
+        <div class="beb-desc">Al final de la noche</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nota-card">
+    <p>Avísanos si tienes alguna restricción alimentaria o alergia<br>y con gusto te buscamos una alternativa. ❤️</p>
+  </div>
+</div>
+
+<div style="position:fixed;bottom:6px;right:10px;font-size:10px;color:#9C8878;opacity:.5;pointer-events:none;z-index:999;font-family:'DM Sans',sans-serif;">v 2026-05-27</div>
+</body>
+</html>

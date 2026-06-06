@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Cuál es mi mesa? · Nydia & Octavio</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#7D2935;--rose-light:#F3E8EA;--rose-dark:#561820;--rose-mid:#A34455;
+  --gold:#9C6B2E;--gold-light:#F7F0E3;--gold-mid:#C4973A;
+  --sage:#4A7C59;--sage-light:#EBF2ED;--sage-dark:#2E5C3A;
+  --kraft:#EDE0CB;--ink:#2A1F1A;--ink-soft:#5C4A3A;--ink-mute:#9C8878;
+  --surface:#FAF7F2;--surface2:#F2EBE0;
+  --border:rgba(90,50,30,0.10);--border-strong:rgba(90,50,30,0.22);
+  --radius:10px;--radius-lg:16px;
+  --font-display:"Great Vibes",cursive;
+  --font-heading:"Cormorant Garamond",serif;
+  --font-body:"DM Sans",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--font-body);background:var(--surface);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
+
+/* Top bar */
+.top-bar{width:100%;display:flex;align-items:center;padding:14px 16px;gap:10px;border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10}
+.home-btn{display:flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:13px;font-family:var(--font-body);text-decoration:none;padding:6px 10px;border-radius:20px;background:var(--surface2);border:0.5px solid var(--border-strong);transition:background .15s;flex-shrink:0}
+.home-btn:hover{background:var(--rose-light)}
+.home-btn svg{width:13px;height:13px;fill:currentColor}
+.top-bar-title{font-family:var(--font-heading);font-size:17px;font-weight:600;color:var(--ink);flex:1;text-align:center}
+.top-bar-space{width:72px;flex-shrink:0}
+
+/* Hero */
+.hero{text-align:center;padding:28px 24px 16px;animation:fadeDown .5s ease both;width:100%}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.hero-names{font-family:var(--font-display);font-size:54px;color:var(--rose-dark);line-height:1;margin-bottom:6px}
+.hero-sub{font-family:var(--font-heading);font-size:15px;color:var(--ink-soft);font-style:italic}
+
+/* Buscador */
+.search-wrap{width:100%;max-width:560px;padding:0 16px 20px;animation:fadeUp .4s .1s ease both}
+.search-box{
+  width:100%;padding:13px 16px 13px 42px;
+  font-family:var(--font-body);font-size:15px;color:var(--ink);
+  background:#fff;border:0.5px solid var(--border-strong);
+  border-radius:var(--radius-lg);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.search-box:focus{border-color:var(--rose-mid);box-shadow:0 0 0 3px rgba(125,41,53,.08)}
+.search-box::placeholder{color:var(--ink-mute)}
+.search-icon{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--ink-mute);font-size:16px;pointer-events:none}
+.search-rel{position:relative}
+
+/* Resultado highlight */
+.mesa-highlight{
+  display:none;width:100%;max-width:560px;padding:0 16px 8px;
+  animation:fadeUp .3s ease both;
+}
+.mesa-highlight-card{
+  background:var(--sage-light);border:1.5px solid var(--sage);
+  border-radius:var(--radius-lg);padding:16px 20px;
+  text-align:center;
+}
+.mesa-highlight-label{font-size:12px;color:var(--sage-dark);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-heading);margin-bottom:4px}
+.mesa-highlight-name{font-family:var(--font-display);font-size:36px;color:var(--sage-dark);line-height:1.1}
+
+/* Grid de mesas */
+.mesas-grid{
+  width:100%;max-width:680px;padding:8px 16px;
+  display:flex;flex-wrap:wrap;gap:28px;
+  justify-content:center;align-items:flex-start;
+  animation:fadeUp .4s .15s ease both;
+}
+
+.mesa-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .3s}
+.mesa-wrap.dimmed{opacity:.25}
+.mesa-wrap.highlighted .layout-table-circle{box-shadow:0 0 0 4px var(--sage),0 0 24px rgba(74,124,89,.3)}
+
+.layout-table-circle{position:relative;flex-shrink:0;border-radius:50%;transition:box-shadow .2s}
+.layout-guest-seat{
+  position:absolute;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:7.5px;font-weight:500;color:var(--ink-soft);
+  text-align:center;line-height:1.1;
+  cursor:default;
+  word-break:break-word;
+  overflow:hidden;
+  padding:2px;
+}
+.layout-guest-seat.novio{border:1.5px solid var(--sage);background:var(--sage-light);color:var(--sage-dark)}
+.layout-guest-seat.novia{border:1.5px solid var(--rose-mid);background:var(--rose-light);color:var(--rose-dark)}
+.layout-table-name{font-family:var(--font-heading);font-size:12px;font-weight:600;color:var(--rose-dark);text-align:center;padding:0 8px;line-height:1.3}
+.layout-table-total{font-size:10px;color:var(--ink-mute);margin-top:2px;text-align:center}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-family:var(--font-body);transition:transform .3s,opacity .3s;opacity:0;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="home-btn" href="index.html">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Inicio
+  </a>
+  <div class="top-bar-title">¿Cuál es mi mesa?</div>
+  <div class="top-bar-space"></div>
+</div>
+
+<div class="hero">
+  <div class="hero-names">Nydia & Octavio</div>
+  <div class="hero-sub">Busca tu nombre para encontrar tu lugar</div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-rel">
+    <span class="search-icon">🔍</span>
+    <input class="search-box" id="search" type="text" placeholder="Escribe tu nombre..." autocomplete="off" oninput="buscar(this.value)">
+  </div>
+</div>
+
+<div class="mesa-highlight" id="mesa-highlight">
+  <div class="mesa-highlight-card">
+    <div class="mesa-highlight-label">Tu mesa es</div>
+    <div class="mesa-highlight-name" id="mesa-highlight-name"></div>
+  </div>
+</div>
+
+<div class="mesas-grid" id="mesas-grid"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = "https://qoaxifnrlxxwwdzqxmot.supabase.co";
+const SB_KEY = "sb_publishable_P72GEsWtoUAfqiAev-oFig_SOs1cdwv";
+const sbH   = {"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY};
+
+let mesas = [], guests = [];
+
+async function sbGet(table, qs = "") {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${qs}`, { headers: sbH });
+  return r.ok ? r.json() : [];
+}
+
+function primerNombre(nombre) {
+  return (nombre || "?").trim().split(/\s+/)[0];
+}
+
+function renderMesas() {
+  const SR = 19;       // radio de cada silla
+  const DISC_R = 46;   // radio del círculo central
+  const MIN_ORBIT = 64;
+  const grid = document.getElementById("mesas-grid");
+
+  grid.innerHTML = mesas.map(m => {
+    const glist = guests.filter(g => !g.borrado && g.mesa_grupo === m.nombre);
+    const N = glist.length;
+
+    const orbitR = N <= 1
+      ? MIN_ORBIT
+      : Math.max(MIN_ORBIT, Math.ceil((N * (SR * 2 + 10)) / (2 * Math.PI)));
+
+    const CX = orbitR + SR + 4;
+    const SIZE = CX * 2;
+    const discInset = CX - DISC_R;
+    const angleStep = N > 0 ? (2 * Math.PI) / N : 0;
+
+    const seats = glist.map((g, i) => {
+      const angle = angleStep * i - Math.PI / 2;
+      const cx = CX + orbitR * Math.cos(angle) - SR;
+      const cy = CX + orbitR * Math.sin(angle) - SR;
+      const sideClass = g.lado === 'NOVIO' ? 'novio' : 'novia';
+      const label = primerNombre(g.name);
+      return `<div class="layout-guest-seat ${sideClass}"
+        style="left:${cx}px;top:${cy}px;width:${SR*2}px;height:${SR*2}px"
+        title="${(g.name||'').replace(/"/g,'&quot;')}"
+        data-name="${(g.name||'').toLowerCase()}"
+        data-mesa="${m.nombre}"
+      >${label}</div>`;
+    }).join('');
+
+    return `<div class="mesa-wrap" id="mesa-wrap-${m.id}" data-mesa="${m.nombre}">
+      <div class="layout-table-circle" style="width:${SIZE}px;height:${SIZE}px">
+        <div style="position:absolute;top:${discInset}px;left:${discInset}px;right:${discInset}px;bottom:${discInset}px;
+             border-radius:50%;background:var(--rose-light);border:2.5px solid var(--rose-mid);
+             display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <div style="text-align:center">
+            <div class="layout-table-name">${m.nombre}</div>
+            <div class="layout-table-total">${N} inv.</div>
+          </div>
+        </div>
+        ${seats}
+      </div>
+    </div>`;
+  }).join('') || `<div style="color:var(--ink-mute);font-size:13px;padding:32px;text-align:center">Sin mesas disponibles.</div>`;
+}
+
+function buscar(q) {
+  const query = q.trim().toLowerCase();
+  const highlight = document.getElementById("mesa-highlight");
+  const highlightName = document.getElementById("mesa-highlight-name");
+  const wraps = document.querySelectorAll(".mesa-wrap");
+  const seats = document.querySelectorAll(".layout-guest-seat");
+
+  // Reset visual
+  seats.forEach(s => s.style.outline = "none");
+
+  if (!query) {
+    highlight.style.display = "none";
+    wraps.forEach(w => { w.classList.remove("dimmed","highlighted"); });
+    return;
+  }
+
+  // Buscar invitados que coincidan
+  const matches = [...seats].filter(s => s.dataset.name && s.dataset.name.includes(query));
+
+  if (matches.length === 0) {
+    highlight.style.display = "none";
+    wraps.forEach(w => w.classList.add("dimmed"));
+    return;
+  }
+
+  // Mesas que tienen match
+  const mesasConMatch = new Set(matches.map(s => s.dataset.mesa));
+
+  // Highlight de sillas
+  matches.forEach(s => {
+    s.style.outline = "2.5px solid var(--sage-dark)";
+    s.style.outlineOffset = "2px";
+  });
+
+  // Si hay una sola mesa → mostrar banner
+  if (mesasConMatch.size === 1) {
+    const mesaNombre = [...mesasConMatch][0];
+    highlightName.textContent = mesaNombre;
+    highlight.style.display = "block";
+  } else {
+    highlight.style.display = "none";
+  }
+
+  // Dim/highlight mesas
+  wraps.forEach(w => {
+    if (mesasConMatch.has(w.dataset.mesa)) {
+      w.classList.remove("dimmed");
+      w.classList.add("highlighted");
+    } else {
+      w.classList.remove("highlighted");
+      w.classList.add("dimmed");
+    }
+  });
+
+  // Scroll a la primera mesa con match
+  const firstMesa = document.querySelector(`.mesa-wrap[data-mesa="${[...mesasConMatch][0]}"]`);
+  if (firstMesa) firstMesa.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function init() {
+  [mesas, guests] = await Promise.all([
+    sbGet("mesas", "order=orden.asc,created_at.asc"),
+    sbGet("guests", "borrado=eq.false&order=name.asc")
+  ]);
+  renderMesas();
+}
+
+init();
+</script>
+</body>
+</html>
