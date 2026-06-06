@@ -441,37 +441,6 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
 .font-picker-opt-sample { font-size: 18px; color: var(--admin-text); line-height: 1.2; }
 .font-picker-opt-name { font-size: 9px; color: var(--admin-mute); letter-spacing: .04em; }
 
-/* Background pattern picker */
-.bg-panel { display: none; flex-direction: column; gap: 12px; }
-.bg-panel.active { display: flex; }
-.bg-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-}
-.bg-opt {
-  border-radius: 8px; overflow: hidden; cursor: pointer;
-  border: 2px solid transparent; transition: border-color .15s, transform .1s;
-  aspect-ratio: 1; position: relative;
-}
-.bg-opt:hover { transform: scale(1.04); }
-.bg-opt.selected { border-color: var(--admin-accent); }
-.bg-opt-swatch {
-  width: 100%; height: 100%; display: block;
-}
-.bg-opt-label {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  font-size: 8px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-  color: rgba(255,255,255,0.9); text-align: center; padding: 3px 2px;
-  background: rgba(0,0,0,0.35);
-}
-.bg-upload-zone {
-  border: 1.5px dashed var(--admin-border); border-radius: var(--radius);
-  padding: 12px; text-align: center; cursor: pointer;
-  transition: border-color .15s, background .15s; position: relative;
-  font-size: 12px; color: var(--admin-mute);
-}
-.bg-upload-zone:hover { border-color: var(--admin-accent); background: var(--admin-accent-light); }
-.bg-upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-
 .typo-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
 .typo-table th {
   font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
@@ -640,21 +609,11 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
           <span class="tab-label">QR</span>
           <span class="tab-dot"></span>
         </button>
-
-        <button class="img-tab" id="img-tab-fondo" onclick="switchImgTab('fondo')">
-          <span class="tab-icon">🎨</span>
-          <span class="tab-label">Fondo</span>
+        <button class="img-tab" id="img-tab-otra" onclick="switchImgTab('otra')">
+          <span class="tab-icon">➕</span>
+          <span class="tab-label">Otra</span>
           <span class="tab-dot"></span>
         </button>
-      </div>
-
-      <!-- Background panel (fondo tab only) -->
-      <div class="bg-panel" id="bg-panel">
-        <div class="bg-grid" id="bg-grid"><!-- populated by JS --></div>
-        <div class="bg-upload-zone" style="position:relative;">
-          <input type="file" id="f-bg-input" accept="image/*" onchange="handleBgUpload(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
-          📁 Subir textura personalizada · JPG · PNG
-        </div>
       </div>
 
       <!-- Upload zone (shared) -->
@@ -689,7 +648,10 @@ body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--ad
           <img class="img-thumb" id="thumb-qr" src="" alt="QR">
           <div class="img-thumb-label">QR</div>
         </div>
-
+        <div class="img-thumb-wrap" id="thumb-wrap-otra">
+          <img class="img-thumb" id="thumb-otra" src="" alt="Otra">
+          <div class="img-thumb-label">Otra</div>
+        </div>
       </div>
     </div>
 
@@ -1281,7 +1243,7 @@ async function renderFontCards(fonts) {
   await Promise.all(fonts.map(f => loadGoogleFont(f.name)));
 
   container.innerHTML = fonts.map((f, i) => `
-    <div class="font-card" onclick="selectFont(this.dataset.font, this)" data-font="${f.name}">
+    <div class="font-card" onclick="selectFont('${f.name.replace(/'/g,"\'")}', this)" data-font="${f.name}">
       <div class="font-card-name">
         ${f.label}
         <span class="font-card-badge ${f.top ? 'badge-top' : 'badge-alt'}">${f.top ? '✦ Recomendada' : 'Alternativa'}</span>
@@ -1538,44 +1500,36 @@ const IMG_TYPES = {
     tip: '💡 Genera tu QR en qr.io o qr-code-generator.com',
     resizeIcon: '⊞', resizeMin: 80, resizeMax: 200, resizeDefault: 140, resizeUnit: 'px',
   },
-
+  otra: {
+    icon: '➕', title: 'Subir otra imagen', sub: 'PNG · JPG · SVG',
+    tip: null, resizeIcon: '⊞', resizeMin: 40, resizeMax: 200, resizeDefault: 100, resizeUnit: 'px',
+  },
 };
 
 let currentImgTab = 'logo';
-const imgStore = { logo: null, invitacion: null, qr: null };
-const imgSizes = { logo: 52, invitacion: 140, qr: 80 };
+const imgStore = { logo: null, invitacion: null, qr: null, otra: null };
+const imgSizes = { logo: 52, invitacion: 140, qr: 80, otra: 100 };
 
 function switchImgTab(type) {
   currentImgTab = type;
-
-  // Update all tab buttons (including fondo)
-  ['logo','invitacion','qr','fondo'].forEach(t => {
+  const cfg = IMG_TYPES[type];
+  // Update tabs
+  Object.keys(IMG_TYPES).forEach(t => {
     document.getElementById('img-tab-' + t)?.classList.toggle('active', t === type);
   });
-
-  const bgPanel = document.getElementById('bg-panel');
-  const uploadZone = document.getElementById('img-upload-zone');
-  const resizeRow = document.getElementById('img-resize-row');
-
-  if (type === 'fondo') {
-    bgPanel.classList.add('active');
-    uploadZone.style.display = 'none';
-    resizeRow.classList.remove('visible');
-    return;
-  }
-
-  bgPanel.classList.remove('active');
-  uploadZone.style.display = '';
-
-  const cfg = IMG_TYPES[type];
+  // Update upload zone
   document.getElementById('img-zone-icon').textContent = cfg.icon;
   document.getElementById('img-zone-title').textContent = cfg.title;
   document.getElementById('img-zone-sub').textContent = cfg.sub;
   const tipEl = document.getElementById('img-zone-tip');
   if (cfg.tip) { tipEl.textContent = cfg.tip; tipEl.style.display = ''; }
   else { tipEl.style.display = 'none'; }
-  uploadZone.classList.toggle('has-image', !!imgStore[type]);
+  // Update upload zone state
+  const zone = document.getElementById('img-upload-zone');
+  zone.classList.toggle('has-image', !!imgStore[type]);
+  // Reset file input
   document.getElementById('f-img-input').value = '';
+  // Update slider
   const sz = imgSizes[type];
   const sl = document.getElementById('img-size-slider');
   sl.min = cfg.resizeMin; sl.max = cfg.resizeMax; sl.value = sz;
@@ -1583,6 +1537,7 @@ function switchImgTab(type) {
   const label = cfg.resizeUnit === 'px' ? sz + 'px' : sizeLabel(type, sz);
   document.getElementById('img-size-val').textContent = label;
   updateSliderTrack('img-size-slider');
+  const resizeRow = document.getElementById('img-resize-row');
   resizeRow.classList.toggle('visible', !!imgStore[type]);
 }
 
@@ -1671,14 +1626,30 @@ function applyImgToPreview(type, url, size) {
   }
 }
 
-// Kept for compat - now unused but do not break AI flow
+// Kept for compat — now unused but don't break AI flow
 function handlePhoto(e) { }
 function resizeLogo(val) { }
 function resizePhoto(val) { }
 function toggleLogo(active) { }
 function handleLogo(e) { }
+function handleQR(e) { }
 
-
+// ── QR IMAGE ──
+function handleQR(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  // Panel preview
+  const qrPrev = document.getElementById('qr-preview-img');
+  qrPrev.src = url; qrPrev.style.display = 'block';
+  // Preview block — hide pattern, show image
+  const pattern = document.getElementById('qr-pattern');
+  const qrImg = document.getElementById('prev-qr-img');
+  pattern.style.display = 'none';
+  qrImg.src = url; qrImg.style.display = 'block';
+  // Resize square to fit image
+  document.getElementById('qr-square').style.background = 'white';
+}
 
 // resizePhoto merged into resizeImg
 
@@ -1687,99 +1658,6 @@ function updateSliderTrack(id) {
   if (!sl) return;
   const pct = ((sl.value - sl.min) / (sl.max - sl.min) * 100).toFixed(1);
   sl.style.setProperty('--pct', pct + '%');
-}
-
-// ── BACKGROUND PATTERNS ──
-const BG_PATTERNS = [
-  {
-    id: 'none', label: 'Limpio',
-    style: 'background:#FAF7F2;',
-    css: 'background: var(--ev-surface);'
-  },
-  {
-    id: 'lino', label: 'Lino',
-    style: 'background-color:#EDE8DF;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.03) 0px,rgba(0,0,0,0.03) 1px,transparent 1px,transparent 4px),repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 4px);',
-    css: 'background-color:#EDE8DF;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.03) 0px,rgba(0,0,0,0.03) 1px,transparent 1px,transparent 4px),repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 4px);'
-  },
-  {
-    id: 'kraft', label: 'Kraft',
-    style: 'background-color:#E8D9BE;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");',
-    css: 'background-color:#E8D9BE;'
-  },
-  {
-    id: 'marmol', label: 'Mármol',
-    style: 'background-color:#F4F2F0;background-image:repeating-linear-gradient(125deg,rgba(180,170,160,0.12) 0px,transparent 2px,transparent 8px,rgba(180,170,160,0.08) 10px);',
-    css: 'background-color:#F4F2F0;background-image:repeating-linear-gradient(125deg,rgba(180,170,160,0.12) 0px,transparent 2px,transparent 8px,rgba(180,170,160,0.08) 10px);'
-  },
-  {
-    id: 'acuarela', label: 'Acuarela',
-    style: 'background:radial-gradient(ellipse at 20% 20%,rgba(196,151,58,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(125,41,53,0.06) 0%,transparent 60%),#FAF7F2;',
-    css: 'background:radial-gradient(ellipse at 20% 20%,rgba(196,151,58,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(125,41,53,0.06) 0%,transparent 60%),#FAF7F2;'
-  },
-  {
-    id: 'cuadricula', label: 'Cuadrícula',
-    style: 'background-color:#F8F6F2;background-image:linear-gradient(rgba(0,0,0,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.04) 1px,transparent 1px);background-size:24px 24px;',
-    css: 'background-color:#F8F6F2;background-image:linear-gradient(rgba(0,0,0,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.04) 1px,transparent 1px);background-size:24px 24px;'
-  },
-  {
-    id: 'puntos', label: 'Puntos',
-    style: 'background-color:#FAF7F2;background-image:radial-gradient(circle,rgba(0,0,0,0.08) 1px,transparent 1px);background-size:18px 18px;',
-    css: 'background-color:#FAF7F2;background-image:radial-gradient(circle,rgba(0,0,0,0.08) 1px,transparent 1px);background-size:18px 18px;'
-  },
-  {
-    id: 'noche', label: 'Noche',
-    style: 'background:linear-gradient(160deg,#1a1530 0%,#0e1020 100%);',
-    css: 'background:linear-gradient(160deg,#1a1530 0%,#0e1020 100%);'
-  },
-];
-
-let selectedBg = 'none';
-
-function initBgPanel() {
-  const grid = document.getElementById('bg-grid');
-  if (!grid) return;
-  grid.innerHTML = BG_PATTERNS.map(p => `
-    <div class="bg-opt ${p.id === selectedBg ? 'selected' : ''}"
-      id="bg-opt-${p.id}" onclick="selectBg('${p.id}')">
-      <div class="bg-opt-swatch" style="${p.style}"></div>
-      <span class="bg-opt-label">${p.label}</span>
-    </div>
-  `).join('');
-}
-
-function selectBg(id) {
-  selectedBg = id;
-  document.querySelectorAll('.bg-opt').forEach(o => o.classList.remove('selected'));
-  document.getElementById('bg-opt-' + id)?.classList.add('selected');
-  const p = BG_PATTERNS.find(x => x.id === id);
-  if (!p) return;
-  const page = document.getElementById('event-preview');
-  if (page) {
-    // Only override background properties, preserve layout styles
-    const props = ['background','background-color','background-image','background-size','background-position'];
-    props.forEach(pr => page.style.removeProperty(pr));
-    // Parse and apply only background-related CSS
-    const tmp = document.createElement('div');
-    tmp.setAttribute('style', p.css);
-    ['background','backgroundColor','backgroundImage','backgroundSize','backgroundPosition'].forEach(pr => {
-      if (tmp.style[pr]) page.style[pr] = tmp.style[pr];
-    });
-  }
-  // Mark fondo tab as active
-  document.getElementById('img-tab-fondo')?.classList.toggle('has-image', id !== 'none');
-}
-
-function handleBgUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const url = URL.createObjectURL(file);
-  const page = document.getElementById('event-preview');
-  if (page) page.style.backgroundImage = `url('${url}')`;
-  page.style.backgroundSize = 'cover';
-  page.style.backgroundPosition = 'center';
-  document.getElementById('img-tab-fondo')?.classList.add('has-image');
-  selectedBg = 'custom';
-  document.querySelectorAll('.bg-opt').forEach(o => o.classList.remove('selected'));
 }
 
 // ── FONT PICKER ──
@@ -1833,9 +1711,6 @@ document.addEventListener('click', () => {
 updatePreview();
 initFontSelector();
 renderQRPlaceholder();
-initBgPanel();
-// Apply initial typography to preview
-Object.keys(typography).forEach(key => applyTypoToPreview(key));
 </script>
 </body>
 </html>
