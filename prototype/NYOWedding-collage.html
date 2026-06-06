@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collage · Nydia & Octavio</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --font-display:"Great Vibes",cursive;
+  --font-heading:"Cormorant Garamond",serif;
+  --font-body:"DM Sans",sans-serif;
+  --sage-dark:#3D5C42;--rose-dark:#561820;--ink:#2A1F1A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a110d}
+
+/* Canvas */
+#collage-wrap{width:100vw;height:100vh;overflow:hidden;position:relative}
+#collage-wrap.manual-scroll{overflow-y:auto}
+.collage-canvas{
+  position:absolute;left:0;right:0;top:0;
+  display:flex;gap:6px;padding:6px;
+  align-items:flex-start;will-change:transform;
+}
+#collage-wrap.manual-scroll .collage-canvas{
+  position:relative;will-change:auto;transform:none !important;
+}
+.collage-col{flex:1;display:flex;flex-direction:column;gap:6px}
+
+/* Foto */
+.collage-photo{
+  width:100%;border-radius:4px;overflow:hidden;
+  border:3px solid rgba(255,255,255,0.12);
+  box-shadow:0 2px 12px rgba(0,0,0,.5);
+  cursor:pointer;
+  transform:rotate(var(--r,0deg));
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;flex-shrink:0;
+  animation:fadeInPhoto .5s ease both;
+}
+@keyframes fadeInPhoto{
+  from{opacity:0;transform:rotate(var(--r,0deg)) scale(.92)}
+  to{opacity:1;transform:rotate(var(--r,0deg)) scale(1)}
+}
+.collage-photo:hover{transform:rotate(var(--r,0deg)) scale(1.03);box-shadow:0 8px 32px rgba(0,0,0,.7);border-color:rgba(237,224,203,.5);z-index:5}
+.collage-photo img,.collage-photo video{width:100%;display:block;object-fit:cover;min-height:120px}
+.collage-photo video{aspect-ratio:9/16;background:#000}
+.photo-name{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,17,13,.75));color:rgba(237,224,203,.9);font-size:10px;text-align:center;padding:12px 6px 5px;font-family:var(--font-body)}
+.collage-hide-btn{display:none;position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(26,17,13,.8);color:#EDE0CB;border:none;cursor:pointer;font-size:11px;align-items:center;justify-content:center}
+.collage-hide-btn.visible{display:flex}
+
+/* Foto seleccionada */
+.collage-photo.selected{outline:3px solid #4A7C59;outline-offset:2px;box-shadow:0 0 0 5px rgba(74,124,89,.35),0 8px 32px rgba(0,0,0,.7)}
+.collage-photo.selected::after{content:"✓";position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#4A7C59;color:#fff;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:5}
+
+/* UI overlays */
+.collage-header{position:fixed;top:0;left:0;right:0;z-index:10;text-align:center;padding:28px 24px 40px;background:linear-gradient(to bottom,rgba(26,17,13,0.92) 40%,transparent);pointer-events:none}
+.collage-title{font-family:var(--font-display);font-size:60px;color:#EDE0CB;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.4)}
+.collage-sub{font-family:var(--font-heading);font-size:14px;color:rgba(237,224,203,.6);letter-spacing:.18em;text-transform:uppercase;margin-top:6px}
+.collage-footer-fade{position:fixed;bottom:0;left:0;right:0;height:100px;z-index:9;background:linear-gradient(to top,rgba(26,17,13,0.95) 20%,transparent);pointer-events:none}
+
+/* Inicio btn */
+.collage-home{position:fixed;top:16px;left:16px;z-index:20;display:flex;align-items:center;gap:7px;background:rgba(26,17,13,.75);color:#EDE0CB;border:0.5px solid rgba(237,224,203,.2);border-radius:30px;padding:7px 14px;font-family:var(--font-body);font-size:13px;cursor:pointer;text-decoration:none;transition:background .15s}
+.collage-home:hover{background:rgba(26,17,13,.95)}
+.collage-home svg{width:13px;height:13px;fill:currentColor}
+
+/* Live dot */
+.collage-live{position:fixed;top:16px;right:16px;z-index:20;display:flex;align-items:center;gap:6px;background:rgba(26,17,13,.75);color:#EDE0CB;font-size:11px;padding:5px 12px;border-radius:20px;font-family:var(--font-body);border:0.5px solid rgba(237,224,203,.2)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#c0392b;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Contador */
+.collage-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(26,17,13,.75);color:#EDE0CB;padding:8px 24px;border-radius:20px;text-align:center;font-family:var(--font-body);border:0.5px solid rgba(237,224,203,.2)}
+.collage-counter-num{font-family:var(--font-heading);font-size:28px;line-height:1}
+.collage-counter-lbl{font-size:11px;opacity:.6}
+
+/* Toggle auto-scroll */
+.scroll-toggle{position:fixed;bottom:20px;left:16px;z-index:20;display:flex;align-items:center;gap:8px;background:rgba(26,17,13,.75);color:#EDE0CB;padding:8px 14px;border-radius:20px;font-family:var(--font-body);font-size:12px;border:0.5px solid rgba(237,224,203,.2);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.toggle-dot{width:28px;height:16px;border-radius:8px;background:rgba(237,224,203,.25);position:relative;transition:background .2s;flex-shrink:0}
+.toggle-dot::after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:#EDE0CB;top:2px;left:2px;transition:transform .2s}
+.scroll-toggle.active .toggle-dot{background:#4A7C59}
+.scroll-toggle.active .toggle-dot::after{transform:translateX(12px)}
+
+/* Barra de descarga */
+.download-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;background:rgba(26,17,13,.95);border-top:0.5px solid rgba(237,224,203,.15);padding:12px 16px;display:flex;align-items:center;gap:10px;transform:translateY(100%);transition:transform .3s}
+.download-bar.visible{transform:translateY(0)}
+.download-bar-info{flex:1;font-family:var(--font-body);font-size:13px;color:rgba(237,224,203,.7)}
+.download-bar-info strong{color:#EDE0CB}
+.btn-download{background:#4A7C59;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.btn-download:hover{background:#3D5C42}
+.btn-deselect{background:rgba(237,224,203,.1);color:rgba(237,224,203,.7);border:0.5px solid rgba(237,224,203,.2);padding:10px 14px;border-radius:20px;font-family:var(--font-body);font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#FAF7F2;padding:12px 24px;border-radius:10px;font-size:13px;font-family:var(--font-body);transition:transform .3s;z-index:100;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--sage-dark)}
+.toast.err{background:var(--rose-dark)}
+</style>
+</head>
+<body>
+
+<div id="collage-wrap">
+  <div class="collage-header">
+    <div class="collage-title">Nydia &amp; Octavio</div>
+    <div class="collage-sub">29 · Mayo · 2026 · Nuestros recuerdos</div>
+  </div>
+  <div class="collage-canvas" id="collage-canvas"></div>
+  <div class="collage-footer-fade"></div>
+</div>
+
+<div class="collage-live"><div class="live-dot"></div>en vivo</div>
+<div class="collage-counter">
+  <div class="collage-counter-num" id="collage-num">0</div>
+  <div class="collage-counter-lbl">fotos</div>
+</div>
+<a class="collage-home" href="index.html">
+  <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  Inicio
+</a>
+<div class="scroll-toggle active" id="scroll-toggle">
+  <div class="toggle-dot"></div>
+  Auto
+</div>
+<div class="download-bar" id="download-bar">
+  <div class="download-bar-info"><strong id="sel-count">0</strong> foto(s) seleccionada(s)</div>
+  <button class="btn-deselect" id="btn-deselect">Limpiar</button>
+  <button class="btn-download" id="btn-download">↓ Descargar</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL="https://qoaxifnrlxxwwdzqxmot.supabase.co";
+const SB_KEY="sb_publishable_P72GEsWtoUAfqiAev-oFig_SOs1cdwv";
+const TABLA="fotos";
+const{createClient}=supabase;
+const sb=createClient(SB_URL,SB_KEY);
+
+const wrap=document.getElementById("collage-wrap");
+const canvas=document.getElementById("collage-canvas");
+const numEl=document.getElementById("collage-num");
+const toggleEl=document.getElementById("scroll-toggle");
+const downloadBar=document.getElementById("download-bar");
+const selCountEl=document.getElementById("sel-count");
+
+let totalFotos=0;
+let autoScroll=true;
+let scrollY=0;
+const SPEED=0.5;
+const placedIds=new Set();
+const selectedIds=new Map();
+
+const VW=window.innerWidth;
+const NUM_COLS=VW<480?2:VW<768?3:4;
+const ROTS=[-1.8,0.9,-0.6,1.4,0,-1.2,0.7,-0.4];
+const cols=[];
+
+for(let i=0;i<NUM_COLS;i++){
+  const col=document.createElement("div");
+  col.className="collage-col";
+  canvas.appendChild(col);
+  cols.push({el:col,height:0});
+}
+
+function getShortestCol(){return cols.reduce((min,col,i)=>col.height<cols[min].height?i:min,0)}
+function rndRot(ci){const b=ROTS[ci%ROTS.length];return b+(Math.random()*.6-.3)}
+
+function updateDownloadBar(){
+  const n=selectedIds.size;
+  selCountEl.textContent=n;
+  downloadBar.classList.toggle("visible",n>0);
+}
+
+document.getElementById("btn-deselect").addEventListener("click",()=>{
+  selectedIds.clear();
+  document.querySelectorAll(".collage-photo.selected").forEach(el=>el.classList.remove("selected"));
+  updateDownloadBar();
+});
+
+document.getElementById("btn-download").addEventListener("click",async()=>{
+  if(selectedIds.size===0)return;
+  showToast(`Descargando ${selectedIds.size} foto(s)...`);
+  for(const[id,url]of selectedIds){
+    try{
+      const res=await fetch(url);
+      const blob=await res.blob();
+      const ext=blob.type.includes("video")?"mp4":"jpg";
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download=`NYO_${id}.${ext}`;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+      await new Promise(r=>setTimeout(r,400));
+    }catch(e){console.error("dl error",id,e)}
+  }
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid=/Android/.test(navigator.userAgent);
+  if(isIOS) showToast("📱 iOS: ve a Archivos → Descargas para guardar en tu carrete","ok",6000);
+  else if(isAndroid) showToast("📱 Android: revisa tu carpeta Descargas","ok",5000);
+  else showToast("Descarga completa! 📸","ok");
+});
+
+toggleEl.addEventListener("click",()=>{
+  autoScroll=!autoScroll;
+  toggleEl.classList.toggle("active",autoScroll);
+  wrap.classList.toggle("manual-scroll",!autoScroll);
+  if(autoScroll){scrollY=wrap.scrollTop;wrap.scrollTop=0}
+  else{wrap.scrollTop=scrollY}
+});
+
+function placePhoto(row,prepend=false){
+  if(placedIds.has(row.id)||row.oculta)return;
+  placedIds.add(row.id);
+  totalFotos++;numEl.textContent=totalFotos;
+
+  const esVideo=row.tipo==="video";
+  const colIdx=prepend?0:getShortestCol();
+  const rot=rndRot(colIdx);
+
+  const el=document.createElement("div");
+  el.className="collage-photo";
+  el.dataset.id=row.id;
+  el.style.setProperty("--r",rot+"deg");
+  el.innerHTML=`
+    ${esVideo?`<video src="${row.url}" muted loop autoplay playsinline></video>`:`<img src="${row.url}" alt="" loading="lazy" decoding="async">`}
+    ${row.nombre?`<div class="photo-name">${row.nombre}</div>`:""}
+    <button class="collage-hide-btn" title="Ocultar">x</button>
+  `;
+
+  let tapTimer=null;
+  el.addEventListener("click",e=>{
+    if(!autoScroll){
+      if(e.target.closest(".collage-hide-btn"))return;
+      el.classList.toggle("selected");
+      if(el.classList.contains("selected"))selectedIds.set(row.id,row.url);
+      else selectedIds.delete(row.id);
+      updateDownloadBar();
+      return;
+    }
+    if(tapTimer){clearTimeout(tapTimer);tapTimer=null;e.stopPropagation();el.querySelector(".collage-hide-btn").classList.toggle("visible")}
+    else tapTimer=setTimeout(()=>{tapTimer=null},300);
+  });
+
+  el.querySelector(".collage-hide-btn").addEventListener("click",async e=>{
+    e.stopPropagation();
+    await sb.from(TABLA).update({oculta:true}).eq("id",row.id);
+    el.style.transition="opacity 0.4s,transform 0.4s";
+    el.style.opacity="0";el.style.transform=`rotate(${rot}deg) scale(0.85)`;
+    setTimeout(()=>{el.remove();totalFotos--;numEl.textContent=totalFotos},420);
+  });
+
+  if(prepend)cols[0].el.insertBefore(el,cols[0].el.firstChild);
+  else cols[colIdx].el.appendChild(el);
+
+  const colW=VW/NUM_COLS;
+  const approxH=esVideo?colW*(16/9):colW*(4/3);
+  cols[colIdx].height+=approxH+6;
+  const media=el.querySelector("img,video");
+  if(media){
+    const upd=()=>{const real=el.offsetHeight;if(real>0)cols[colIdx].height+=real-approxH};
+    if(esVideo)media.addEventListener("loadedmetadata",upd,{once:true});
+    else media.addEventListener("load",upd,{once:true});
+  }
+}
+
+function scrollLoop(){
+  if(autoScroll){
+    const maxScroll=canvas.scrollHeight-window.innerHeight;
+    if(maxScroll>0){scrollY+=SPEED;if(scrollY>=maxScroll)scrollY=0;canvas.style.transform=`translateY(-${scrollY}px)`}
+  }
+  requestAnimationFrame(scrollLoop);
+}
+scrollLoop();
+
+function placePhotoRealtime(row){
+  if(placedIds.has(row.id)||row.oculta)return;
+  placePhoto(row,true);
+  setTimeout(()=>{
+    if(autoScroll){scrollY=0;canvas.style.transform="translateY(0)"}
+    else wrap.scrollTo({top:0,behavior:"smooth"});
+  },150);
+}
+
+sb.channel("fotos-collage")
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:TABLA},p=>placePhotoRealtime(p.new))
+  .subscribe();
+
+async function loadAll(){
+  const{data,error}=await sb.from(TABLA).select("*").eq("oculta",false).order("created_at",{ascending:false});
+  if(error){console.error(error);return}
+  if(data)data.forEach(row=>placePhoto(row,false));
+}
+loadAll();
+
+function showToast(msg,type="",dur=3500){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.className=`toast ${type}`;
+  void t.offsetWidth;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),dur);
+}
+</script>
+</body>
+</html>
