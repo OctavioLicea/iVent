@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iVent — Panel de Personalización</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --admin-bg: #0F0E0D;
+  --admin-surface: #1A1917;
+  --admin-border: rgba(255,255,255,0.08);
+  --admin-border-hover: rgba(255,255,255,0.18);
+  --admin-text: #F0EDE8;
+  --admin-mute: #7A756E;
+  --admin-accent: #C4973A;
+  --admin-accent-light: rgba(196,151,58,0.12);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font-ui: 'DM Sans', sans-serif;
+
+  /* Event palette — overridden by JS */
+  --ev-primary: #7D2935;
+  --ev-primary-dark: #561820;
+  --ev-primary-mid: #A34455;
+  --ev-primary-light: #F3E8EA;
+  --ev-accent: #9C6B2E;
+  --ev-accent-light: #F7F0E3;
+  --ev-surface: #FAF7F2;
+  --ev-surface2: #F2EBE0;
+  --ev-kraft: #EDE0CB;
+  --ev-ink: #2A1F1A;
+  --ev-ink-mute: #9C8878;
+  --ev-border: rgba(90,50,30,0.12);
+  --ev-border-strong: rgba(90,50,30,0.22);
+  --ev-sage-light: #EBF0E8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-size: 15px; height: 100%; overflow: hidden; }
+body { font-family: var(--font-ui); background: var(--admin-bg); color: var(--admin-text); display: flex; flex-direction: column; }
+
+/* ── TOP NAV ── */
+.topnav {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 24px; height: 56px;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'DM Sans', sans-serif; font-weight: 600;
+  font-size: 18px; color: var(--admin-text); letter-spacing: -.02em;
+}
+.logo span { color: var(--admin-accent); }
+.topnav-sep { width: 1px; height: 24px; background: var(--admin-border); }
+.topnav-event { font-size: 13px; color: var(--admin-mute); }
+.topnav-spacer { flex: 1; }
+.badge-live {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: #4CAF89; background: rgba(76,175,137,0.12);
+  padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(76,175,137,0.2);
+}
+.badge-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #4CAF89; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── PANEL IZQUIERDO ── */
+.panel {
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  overflow-y: auto;
+  height: 100%;
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.panel::-webkit-scrollbar { width: 4px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: var(--admin-border); border-radius: 4px; }
+
+.section-title {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--admin-mute); margin-bottom: 12px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 12px; color: var(--admin-mute); font-weight: 500; }
+.field input, .field textarea {
+  font-family: var(--font-ui); font-size: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius); padding: 9px 12px;
+  color: var(--admin-text); outline: none;
+  transition: border-color .15s, background .15s;
+}
+.field input:focus, .field textarea:focus {
+  border-color: var(--admin-accent);
+  background: rgba(196,151,58,0.06);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--admin-mute); }
+
+.fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Paletas */
+.palettes { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.palette-opt {
+  border: 2px solid var(--admin-border); border-radius: 10px;
+  padding: 8px 6px; cursor: pointer; transition: border-color .15s, transform .1s;
+  display: flex; flex-direction: column; gap: 4px; align-items: center;
+  background: transparent;
+}
+.palette-opt:hover { border-color: var(--admin-border-hover); transform: translateY(-1px); }
+.palette-opt.active { border-color: var(--admin-accent); background: var(--admin-accent-light); }
+.palette-swatches { display: flex; gap: 2px; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; }
+.palette-name { font-size: 9px; color: var(--admin-mute); text-align: center; white-space: nowrap; }
+
+/* Módulos toggle */
+.module-list { display: flex; flex-direction: column; gap: 8px; }
+.module-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--admin-border);
+  background: rgba(255,255,255,0.02);
+  transition: border-color .15s;
+}
+.module-row.active { border-color: rgba(196,151,58,0.3); background: var(--admin-accent-light); }
+.module-icon { font-size: 16px; width: 28px; text-align: center; }
+.module-info { flex: 1; }
+.module-name { font-size: 13px; font-weight: 500; color: var(--admin-text); }
+.module-desc { font-size: 11px; color: var(--admin-mute); margin-top: 1px; }
+.module-name-input {
+  font-family: var(--font-ui); font-size: 12px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--admin-border);
+  border-radius: 6px; padding: 4px 8px; color: var(--admin-text);
+  outline: none; width: 100%; margin-top: 4px;
+  transition: border-color .15s;
+}
+.module-name-input:focus { border-color: var(--admin-accent); }
+
+/* Toggle */
+.toggle {
+  position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 20px;
+  background: rgba(255,255,255,0.1); transition: background .2s;
+}
+.toggle input:checked + .toggle-track { background: var(--admin-accent); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: white; transition: transform .2s;
+  pointer-events: none;
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+/* Foto upload */
+.upload-zone {
+  border: 1.5px dashed var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: 20px; text-align: center;
+  cursor: pointer; transition: border-color .15s, background .15s;
+  position: relative; overflow: hidden;
+}
+.upload-zone:hover { border-color: var(--admin-accent); background: var(--admin-accent-light); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 24px; margin-bottom: 6px; }
+.upload-text { font-size: 13px; color: var(--admin-mute); }
+.upload-preview {
+  width: 100%; max-height: 120px; object-fit: cover;
+  border-radius: 8px; display: none; margin-top: 8px;
+}
+
+/* AI font button */
+.btn-ai-font {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 10px; padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(196,151,58,0.15), rgba(196,151,58,0.05));
+  border: 1px solid rgba(196,151,58,0.35);
+  border-radius: var(--radius); color: var(--admin-accent);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s; letter-spacing: .01em;
+}
+.btn-ai-font:hover { background: rgba(196,151,58,0.2); border-color: rgba(196,151,58,0.6); }
+.btn-ai-font.loading { opacity: .7; cursor: not-allowed; }
+#ai-btn-icon { font-size: 15px; animation: none; }
+.btn-ai-font.loading #ai-btn-icon { display: inline-block; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Font result cards */
+.font-card {
+  padding: 12px 14px; border-radius: var(--radius);
+  border: 1.5px solid var(--admin-border);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer; transition: all .15s;
+}
+.font-card:hover { border-color: rgba(196,151,58,0.4); background: rgba(196,151,58,0.06); }
+.font-card.selected { border-color: var(--admin-accent); background: rgba(196,151,58,0.1); }
+.font-card-name { font-size: 11px; font-weight: 600; color: var(--admin-mute); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.font-card-sample { font-size: 26px; line-height: 1.1; color: var(--admin-text); margin-bottom: 6px; }
+.font-card-reason { font-size: 11px; color: var(--admin-mute); line-height: 1.4; }
+.font-card-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+.badge-top { background: rgba(196,151,58,0.2); color: var(--admin-accent); }
+.badge-alt { background: rgba(255,255,255,0.07); color: var(--admin-mute); }
+
+.divider { height: 1px; background: var(--admin-border); }
+
+.btn-apply {
+  width: 100%; padding: 12px; border-radius: var(--radius-lg);
+  background: var(--admin-accent); color: #1A1410;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; transition: opacity .15s, transform .1s;
+  letter-spacing: .01em;
+}
+.btn-apply:hover { opacity: .9; transform: translateY(-1px); }
+.btn-apply:active { transform: scale(.98); }
+
+/* ── PREVIEW ── */
+.preview-area {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding: 32px 24px;
+  background: #080807;
+  overflow-y: auto;
+  height: 100%;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+}
+
+.preview-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: #3A3830; align-self: flex-start;
+}
+
+/* ── EVENT PAGE PREVIEW ── */
+.event-page {
+  width: 100%; max-width: 480px;
+  background: var(--ev-surface);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 24px 16px 32px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+}
+.ev-header { text-align: center; }
+.ev-names {
+  font-family: 'Great Vibes', cursive;
+  font-size: 56px; line-height: 1;
+  color: var(--ev-primary-dark);
+  margin-bottom: 4px;
+}
+.ev-date {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ev-ink-mute);
+}
+
+.ev-btn-maps {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  background: var(--ev-primary-dark); color: #fff;
+  font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600;
+  padding: 12px 18px; border-radius: 12px; border: none; cursor: pointer;
+  letter-spacing: .02em;
+}
+
+.ev-central {
+  display: flex; gap: 10px; width: 100%; align-items: stretch;
+}
+.ev-inv-wrap {
+  flex: 1.4; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(42,31,26,0.13);
+  background: var(--ev-kraft);
+  min-height: 260px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.ev-inv-placeholder {
+  text-align: center; padding: 20px;
+}
+.ev-inv-placeholder .ev-ph-names {
+  font-family: 'Great Vibes', cursive;
+  font-size: 36px; color: var(--ev-primary-dark);
+  line-height: 1.1; margin-bottom: 8px;
+}
+.ev-inv-placeholder .ev-ph-copy {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; color: var(--ev-accent);
+  line-height: 1.5;
+}
+.ev-inv-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  position: absolute; inset: 0;
+}
+
+.ev-right { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.ev-nav-item {
+  background: var(--ev-surface); border: none;
+  border-radius: 12px; padding: 10px 11px;
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer; transition: transform .1s;
+}
+.ev-nav-item:hover { transform: translateY(-1px); }
+.ev-nav-icon {
+  font-size: 15px; width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ev-nav-icon.fotos { background: var(--ev-primary-light); }
+.ev-nav-icon.collage { background: #2a1f1a; color: var(--ev-kraft); }
+.ev-nav-icon.crono { background: var(--ev-surface2); }
+.ev-nav-icon.deseos { background: #F9EEF3; }
+.ev-nav-icon.mesas { background: var(--ev-sage-light); }
+.ev-nav-body { flex: 1; min-width: 0; }
+.ev-nav-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 600;
+  color: var(--ev-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ev-nav-sub { font-size: 9.5px; color: var(--ev-ink-mute); }
+.ev-nav-arrow { font-size: 13px; color: var(--ev-ink-mute); }
+
+/* Color pickers */
+.color-picker-row { display: flex; flex-direction: column; gap: 5px; }
+.color-picker-row label { font-size: 11px; color: var(--admin-mute); }
+.color-pick-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--admin-border);
+  border-radius: var(--radius); padding: 6px 10px;
+  transition: border-color .15s;
+}
+.color-pick-wrap:hover { border-color: var(--admin-border-hover); }
+.color-pick-wrap input[type="color"] {
+  width: 28px; height: 28px; border: none; background: none;
+  cursor: pointer; padding: 0; border-radius: 6px; overflow: hidden;
+}
+.color-hex { font-size: 11px; color: var(--admin-mute); font-family: monospace; letter-spacing: .04em; }
+
+/* ── UNIFIED IMAGE MANAGER ── */
+.img-tabs {
+  display: flex; gap: 4px; margin-bottom: 12px;
+  background: rgba(255,255,255,0.04); border-radius: 10px; padding: 4px;
+}
+.img-tab {
+  flex: 1; padding: 7px 4px; border-radius: 7px; border: none;
+  background: transparent; color: var(--admin-mute);
+  font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all .15s; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.img-tab .tab-icon { font-size: 14px; }
+.img-tab .tab-label { font-size: 9px; letter-spacing: .04em; }
+.img-tab:hover { color: var(--admin-text); }
+.img-tab.active { background: var(--admin-surface); color: var(--admin-text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.img-tab .tab-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--admin-accent); margin-top: 1px; opacity: 0; transition: opacity .15s; }
+.img-tab.has-image .tab-dot { opacity: 1; }
+.img-upload-zone {
+  border: 1.5px dashed var(--admin-border); border-radius: var(--radius-lg);
+  padding: 22px 16px; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s; position: relative;
+  min-height: 100px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+}
+.img-upload-zone:hover { border-color: var(--admin-accent); background: var(--admin-accent-light); }
+.img-upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.img-upload-zone.has-image { border-style: solid; border-color: rgba(196,151,58,0.3); background: rgba(196,151,58,0.04); }
+.img-zone-icon { font-size: 28px; }
+.img-zone-title { font-size: 13px; font-weight: 500; color: var(--admin-text); }
+.img-zone-sub { font-size: 11px; color: var(--admin-mute); }
+.img-zone-tip { font-size: 10.5px; color: var(--admin-mute); padding: 5px 10px; background: rgba(196,151,58,0.08); border-radius: 6px; border-left: 2px solid rgba(196,151,58,0.35); line-height: 1.4; width: 100%; text-align: left; margin-top: 2px; }
+.img-thumb-strip { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.img-thumb { width: 52px; height: 52px; border-radius: 8px; object-fit: contain; border: 1.5px solid var(--admin-border); background: rgba(255,255,255,0.06); display: none; }
+.img-thumb.loaded { display: block; border-color: rgba(196,151,58,0.35); }
+.img-thumb-label { font-size: 9px; color: var(--admin-mute); text-align: center; margin-top: 2px; }
+.img-thumb-wrap { display: none; flex-direction: column; align-items: center; }
+.img-thumb-wrap.loaded { display: flex; }
+
+/* Preview logo */
+.ev-header-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; width: 100%;
+}
+.ev-logo-img {
+  width: 52px; height: 52px; object-fit: contain;
+  border-radius: 8px; display: none; flex-shrink: 0;
+}
+.ev-header-text { text-align: center; flex: 1; }
+
+/* Preview QR with image */
+.ev-qr-img {
+  width: 80px; height: 80px; object-fit: contain;
+  border-radius: 8px; display: none;
+}
+
+/* Typography catalog table */
+/* Custom font picker dropdown */
+.font-picker-wrap { position: relative; width: 100%; }
+.font-picker-btn {
+  width: 100%; padding: 5px 8px; border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255,255,255,0.05); color: var(--admin-text);
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: border-color .15s; text-align: left;
+}
+.font-picker-btn:hover { border-color: var(--admin-accent); }
+.font-picker-btn.open { border-color: var(--admin-accent); background: rgba(196,151,58,0.08); }
+.font-picker-current { font-size: 16px; flex: 1; overflow: hidden; white-space: nowrap; color: var(--admin-text); line-height: 1.2; }
+.font-picker-caret { font-size: 9px; color: var(--admin-mute); flex-shrink: 0; transition: transform .15s; }
+.font-picker-btn.open .font-picker-caret { transform: rotate(180deg); }
+
+.font-picker-panel {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #1E1C1A; border: 1px solid var(--admin-border);
+  border-radius: 10px; z-index: 200; overflow-y: auto; max-height: 260px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.font-picker-panel.open { display: block; }
+.font-picker-panel::-webkit-scrollbar { width: 3px; }
+.font-picker-panel::-webkit-scrollbar-thumb { background: var(--admin-border); border-radius: 3px; }
+.font-picker-option {
+  padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background .1s; display: flex; flex-direction: column; gap: 1px;
+}
+.font-picker-option:last-child { border-bottom: none; }
+.font-picker-option:hover { background: rgba(196,151,58,0.1); }
+.font-picker-option.selected { background: rgba(196,151,58,0.15); }
+.font-picker-opt-sample { font-size: 18px; color: var(--admin-text); line-height: 1.2; }
+.font-picker-opt-name { font-size: 9px; color: var(--admin-mute); letter-spacing: .04em; }
+
+.typo-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.typo-table th {
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--admin-mute); padding: 0 8px 8px; text-align: left; border-bottom: 1px solid var(--admin-border);
+}
+.typo-table th:last-child, .typo-table td:last-child { text-align: center; }
+.typo-row { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .12s; }
+.typo-row:hover { background: rgba(255,255,255,0.02); }
+.typo-row td { padding: 8px; vertical-align: middle; }
+.typo-role-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 20px; white-space: nowrap;
+  background: rgba(196,151,58,0.12); color: var(--admin-accent);
+}
+.typo-sample-cell { min-width: 80px; max-width: 110px; }
+.typo-sample {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--admin-text); line-height: 1.1;
+}
+.typo-select {
+  font-family: var(--font-ui); font-size: 11px;
+  background: #F5F0E8; border: 1px solid var(--admin-border);
+  border-radius: 6px; padding: 5px 6px; color: #1A1410;
+  outline: none; cursor: pointer; width: 100%;
+  transition: border-color .15s;
+  color-scheme: light;
+}
+.typo-select:focus { border-color: var(--admin-accent); }
+.typo-select option { background: #F5F0E8; color: #1A1410; }
+.typo-size-input {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--admin-border);
+  border-radius: 6px; padding: 5px 6px; color: var(--admin-text);
+  outline: none; width: 52px; text-align: center;
+  transition: border-color .15s;
+}
+.typo-size-input:focus { border-color: var(--admin-accent); }
+.typo-toggle-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--admin-border);
+  background: transparent; color: var(--admin-mute); cursor: pointer;
+  font-size: 13px; font-weight: 700; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.typo-toggle-btn.active { background: var(--admin-accent); color: #1a1410; border-color: var(--admin-accent); }
+.typo-caps-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--admin-border);
+  background: transparent; color: var(--admin-mute); cursor: pointer;
+  font-size: 9px; font-weight: 800; letter-spacing: .06em; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.typo-caps-btn.active { background: rgba(196,151,58,0.15); color: var(--admin-accent); border-color: rgba(196,151,58,0.4); }
+
+/* Font selector (kept for AI cards) */
+.font-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.font-opt {
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1.5px solid var(--admin-border);
+  background: transparent; cursor: pointer;
+  transition: all .15s; text-align: left;
+}
+.font-opt:hover { border-color: rgba(196,151,58,0.4); background: rgba(196,151,58,0.05); }
+.font-opt.selected { border-color: var(--admin-accent); background: rgba(196,151,58,0.1); }
+.font-opt-name { font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--admin-mute); margin-bottom: 3px; }
+.font-opt-sample { font-size: 20px; line-height: 1.1; color: var(--admin-text); }
+
+/* QR placeholder */
+/* QR — limpio, fondo surface, QR centrado */
+.ev-qr-block {
+  width: 100%; border-radius: 16px; overflow: hidden;
+  background: var(--ev-surface2);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 16px 18px; gap: 10px;
+}
+.ev-qr-square {
+  width: 140px; height: 140px;
+  border-radius: 10px; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px; position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.ev-qr-pattern {
+  display: grid; grid-template-columns: repeat(7,1fr); gap: 2px;
+  width: 100%; height: 100%; flex-shrink: 0;
+}
+.ev-qr-cell { border-radius: 1px; }
+.ev-qr-label {
+  font-family: 'Cormorant Garamond', serif; font-size: 11px;
+  font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ev-ink-mute); text-align: center;
+}
+
+/* responsive */
+@media (max-width: 860px) {
+  .main { grid-template-columns: 1fr; }
+  .preview-area { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="logo">i<span>V</span>ent</div>
+  <div class="topnav-sep"></div>
+  <div class="topnav-event">Panel de configuración · evento</div>
+  <div class="topnav-spacer"></div>
+  <div class="badge-live">Preview en vivo</div>
+  <div style="background:#F5C518;color:#1A1410;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;">v 2026-06-06 02:11 UTC</div>
+</nav>
+
+<div class="main">
+
+  <!-- ══ PANEL IZQUIERDO ══ -->
+  <div class="panel">
+
+    <!-- Identidad -->
+    <div>
+      <div class="section-title">Identidad del evento</div>
+      <div class="field">
+        <label>Nombres / título del evento</label>
+        <input type="text" id="f-names" value="Graduación UAC 2018-2026" placeholder="Ej: Sofía &amp; Diego" oninput="updatePreview()">
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Fecha del evento</label>
+          <input type="date" id="f-date" value="2026-07-01" onchange="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Hora de inicio</label>
+          <input type="time" id="f-time" value="19:00" onchange="updatePreview()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Venue / lugar</label>
+        <input type="text" id="f-venue" value="Gimnasio Usos Múltiples UAC" placeholder="Nombre del lugar" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Subtítulo <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+        <input type="text" id="f-subtitle" value="Ceremonia de Titulación 2026" placeholder="Ej: Ceremonia de Titulación · Salón Dorado" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>URL Google Maps</label>
+        <input type="url" id="f-maps" value="" placeholder="https://maps.google.com/...">
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── IMÁGENES ── -->
+    <div>
+      <div class="section-title">Imágenes</div>
+
+      <!-- Tabs -->
+      <div class="img-tabs">
+        <button class="img-tab active" id="img-tab-logo" onclick="switchImgTab('logo')">
+          <span class="tab-icon">🏷</span>
+          <span class="tab-label">Logo</span>
+          <span class="tab-dot"></span>
+        </button>
+        <button class="img-tab" id="img-tab-invitacion" onclick="switchImgTab('invitacion')">
+          <span class="tab-icon">🖼</span>
+          <span class="tab-label">Invitación</span>
+          <span class="tab-dot"></span>
+        </button>
+        <button class="img-tab" id="img-tab-qr" onclick="switchImgTab('qr')">
+          <span class="tab-icon">📲</span>
+          <span class="tab-label">QR</span>
+          <span class="tab-dot"></span>
+        </button>
+        <button class="img-tab" id="img-tab-otra" onclick="switchImgTab('otra')">
+          <span class="tab-icon">➕</span>
+          <span class="tab-label">Otra</span>
+          <span class="tab-dot"></span>
+        </button>
+      </div>
+
+      <!-- Upload zone (shared) -->
+      <div class="img-upload-zone" id="img-upload-zone">
+        <input type="file" id="f-img-input" accept="image/*" onchange="handleImgUpload(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+        <div class="img-zone-icon" id="img-zone-icon">🏷</div>
+        <div class="img-zone-title" id="img-zone-title">Subir logo</div>
+        <div class="img-zone-sub" id="img-zone-sub">PNG · JPG · SVG</div>
+        <div class="img-zone-tip" id="img-zone-tip">💡 Para mejor resultado usa PNG con fondo transparente</div>
+      </div>
+
+      <!-- Slider (shared, aparece al subir) -->
+      <div class="resize-row" id="img-resize-row">
+        <span class="resize-icon" id="img-resize-icon">⊞</span>
+        <input type="range" class="resize-slider" id="img-size-slider"
+          min="32" max="200" value="52"
+          oninput="resizeImg(this.value)">
+        <span class="resize-val" id="img-size-val">52px</span>
+      </div>
+
+      <!-- Miniaturas de lo subido -->
+      <div class="img-thumb-strip" id="img-thumb-strip">
+        <div class="img-thumb-wrap" id="thumb-wrap-logo">
+          <img class="img-thumb" id="thumb-logo" src="" alt="Logo">
+          <div class="img-thumb-label">Logo</div>
+        </div>
+        <div class="img-thumb-wrap" id="thumb-wrap-invitacion">
+          <img class="img-thumb" id="thumb-invitacion" src="" alt="Invitación" style="object-fit:cover;">
+          <div class="img-thumb-label">Invitación</div>
+        </div>
+        <div class="img-thumb-wrap" id="thumb-wrap-qr">
+          <img class="img-thumb" id="thumb-qr" src="" alt="QR">
+          <div class="img-thumb-label">QR</div>
+        </div>
+        <div class="img-thumb-wrap" id="thumb-wrap-otra">
+          <img class="img-thumb" id="thumb-otra" src="" alt="Otra">
+          <div class="img-thumb-label">Otra</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Paleta -->
+    <div>
+      <div class="section-title">Paleta de colores</div>
+      <div class="palettes">
+
+        <button class="palette-opt active" onclick="setPalette('boda', this)" title="Romance">
+          <div class="palette-swatches">
+            <div class="swatch" style="background:#561820"></div>
+            <div class="swatch" style="background:#9C6B2E"></div>
+            <div class="swatch" style="background:#EDE0CB"></div>
+          </div>
+          <div class="palette-name">Romance</div>
+        </button>
+
+        <button class="palette-opt" onclick="setPalette('quince', this)" title="Lila &amp; Rosa">
+          <div class="palette-swatches">
+            <div class="swatch" style="background:#5B2D8E"></div>
+            <div class="swatch" style="background:#C97DC0"></div>
+            <div class="swatch" style="background:#F5EAF8"></div>
+          </div>
+          <div class="palette-name">Lila &amp; Rosa</div>
+        </button>
+
+        <button class="palette-opt" onclick="setPalette('marino', this)" title="Gala">
+          <div class="palette-swatches">
+            <div class="swatch" style="background:#1B2C4E"></div>
+            <div class="swatch" style="background:#C4973A"></div>
+            <div class="swatch" style="background:#EEF0F5"></div>
+          </div>
+          <div class="palette-name">Marino & Oro</div>
+        </button>
+
+        <button class="palette-opt" onclick="setPalette('botanico', this)" title="Jardín">
+          <div class="palette-swatches">
+            <div class="swatch" style="background:#2D5016"></div>
+            <div class="swatch" style="background:#7A9E52"></div>
+            <div class="swatch" style="background:#F0F5EA"></div>
+          </div>
+          <div class="palette-name">Jardín</div>
+        </button>
+
+        <button class="palette-opt" id="custom-palette-btn" onclick="setPalette('custom', this)" title="Mi paleta">
+          <div class="palette-swatches">
+            <div class="swatch" id="custom-sw1" style="background:#7D2935"></div>
+            <div class="swatch" id="custom-sw2" style="background:#9C6B2E"></div>
+            <div class="swatch" id="custom-sw3" style="background:#EDE0CB"></div>
+          </div>
+          <div class="palette-name">Mi paleta</div>
+        </button>
+
+      </div>
+
+      <!-- Custom palette pickers -->
+      <div id="custom-pickers" style="display:none;margin-top:14px;padding:14px;background:rgba(255,255,255,0.04);border:1px solid var(--admin-border);border-radius:var(--radius);display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;color:var(--admin-mute);margin-bottom:2px;">Elige tus 4 colores</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+          <div class="color-picker-row">
+            <label>Primary</label>
+            <div class="color-pick-wrap">
+              <input type="color" id="cp1" value="#7D2935" oninput="updateCustomPalette()">
+              <span class="color-hex" id="cp1-hex">#7D2935</span>
+            </div>
+          </div>
+
+          <div class="color-picker-row">
+            <label>Accent</label>
+            <div class="color-pick-wrap">
+              <input type="color" id="cp2" value="#9C6B2E" oninput="updateCustomPalette()">
+              <span class="color-hex" id="cp2-hex">#9C6B2E</span>
+            </div>
+          </div>
+
+          <div class="color-picker-row">
+            <label>Surface</label>
+            <div class="color-pick-wrap">
+              <input type="color" id="cp3" value="#EDE0CB" oninput="updateCustomPalette()">
+              <span class="color-hex" id="cp3-hex">#EDE0CB</span>
+            </div>
+          </div>
+
+          <div class="color-picker-row">
+            <label>Ink</label>
+            <div class="color-pick-wrap">
+              <input type="color" id="cp4" value="#2A1F1A" oninput="updateCustomPalette()">
+              <span class="color-hex" id="cp4-hex">#2A1F1A</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Tipografía -->
+    <div>
+      <div class="section-title">Tipografía</div>
+
+      <table class="typo-table" id="typo-table">
+        <thead>
+          <tr>
+            <th>Rol</th>
+            <th>Muestra</th>
+            <th>Font</th>
+            <th style="width:58px">Tam.</th>
+            <th style="width:36px">B</th>
+            <th style="width:36px">AA</th>
+          </tr>
+        </thead>
+        <tbody id="typo-tbody">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+
+      <!-- AI font suggestion (applies to selected role) -->
+      <button class="btn-ai-font" id="btn-ai-font" onclick="suggestFonts()" style="display:none;margin-top:12px;">
+        <span id="ai-btn-icon">✦</span>
+        <span id="ai-btn-text">Sugerir tipografía con IA</span>
+      </button>
+      <div id="ai-role-hint" style="display:none;font-size:10px;color:var(--admin-mute);text-align:center;margin-top:4px;">
+        Haz click en una fila para elegir qué rol mejorar con IA
+      </div>
+      <div id="font-results" style="display:none;flex-direction:column;gap:8px;margin-top:12px;">
+        <div style="font-size:11px;color:var(--admin-mute);margin-bottom:2px;" id="font-results-label">Tipografías recomendadas</div>
+        <div id="font-cards" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Módulos -->
+    <div>
+      <div class="section-title">Módulos activos</div>
+      <div class="module-list" id="module-list">
+
+        <div class="module-row active" data-module="fotos">
+          <div class="module-icon">📸</div>
+          <div class="module-info">
+            <div class="module-name">Fotos en vivo</div>
+            <input class="module-name-input" data-label="fotos-title" value="Sube tus fotos" oninput="updateModuleLabel('fotos', this.value)">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModule('fotos', this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="module-row active" data-module="collage">
+          <div class="module-icon">🖼</div>
+          <div class="module-info">
+            <div class="module-name">Collage en vivo</div>
+            <input class="module-name-input" data-label="collage-title" value="Collage en vivo" oninput="updateModuleLabel('collage', this.value)">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModule('collage', this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="module-row active" data-module="crono">
+          <div class="module-icon">🕐</div>
+          <div class="module-info">
+            <div class="module-name">Cronograma</div>
+            <input class="module-name-input" data-label="crono-title" value="Cronograma" oninput="updateModuleLabel('crono', this.value)">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModule('crono', this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="module-row active" data-module="deseos">
+          <div class="module-icon">💌</div>
+          <div class="module-info">
+            <div class="module-name">Mensajes</div>
+            <input class="module-name-input" data-label="deseos-title" value="¡Escríbenos algo!" oninput="updateModuleLabel('deseos', this.value)">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModule('deseos', this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="module-row active" data-module="mesas">
+          <div class="module-icon">🪑</div>
+          <div class="module-info">
+            <div class="module-name">Mesas</div>
+            <input class="module-name-input" data-label="mesas-title" value="¿Cuál es mi mesa?" oninput="updateModuleLabel('mesas', this.value)">
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModule('mesas', this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn-apply" onclick="showSaved()">✓ Guardar configuración</button>
+    <div id="saved-msg" style="text-align:center;font-size:12px;color:#4CAF89;display:none;margin-top:-12px;">¡Cambios guardados correctamente!</div>
+
+  </div>
+
+  <!-- ══ PREVIEW ══ -->
+  <div class="preview-area">
+    <div class="preview-label">Vista del invitado · tiempo real</div>
+
+    <div class="event-page" id="event-preview">
+
+      <div class="ev-header">
+        <div class="ev-header-row">
+          <img class="ev-logo-img" id="prev-logo" src="" alt="">
+          <div class="ev-header-text">
+            <div class="ev-names" id="prev-names">Graduación UAC 2018-2026</div>
+            <div id="prev-display" style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--ev-ink-mute);letter-spacing:.06em;margin-top:2px;">Ceremonia de Titulación 2026</div>
+          </div>
+        </div>
+        <div class="ev-date" id="prev-date">29 · Mayo · 2026 &nbsp;·&nbsp; Quinta Arreboleda, Arteaga, Coah.</div>
+      </div>
+
+      <button class="ev-btn-maps" id="prev-maps-btn">
+        <span>📍 ¿Cómo llegar?</span>
+        <span style="opacity:.6">›</span>
+      </button>
+
+      <div class="ev-central">
+        <div class="ev-inv-wrap" id="prev-inv-wrap">
+          <div class="ev-inv-placeholder" id="prev-inv-placeholder">
+            <div class="ev-ph-names" id="prev-ph-names">Graduación<br>UAC<br>2018-2026</div>
+            <div class="ev-ph-copy">Queremos festejar contigo<br>nuestra decisión…</div>
+          </div>
+          <img class="ev-inv-img" id="prev-inv-img" src="" alt="" style="display:none">
+        </div>
+
+        <div class="ev-right" id="prev-modules">
+
+          <div class="ev-nav-item" id="mod-fotos">
+            <div class="ev-nav-icon fotos">📷</div>
+            <div class="ev-nav-body">
+              <div class="ev-nav-title" id="mod-fotos-title">Sube tus fotos</div>
+              <div class="ev-nav-sub">Comparte el momento</div>
+            </div>
+            <div class="ev-nav-arrow">›</div>
+          </div>
+
+          <div class="ev-nav-item" id="mod-collage">
+            <div class="ev-nav-icon collage">🖼</div>
+            <div class="ev-nav-body">
+              <div class="ev-nav-title" id="mod-collage-title">Collage en vivo</div>
+              <div class="ev-nav-sub">Fotos en tiempo real</div>
+            </div>
+            <div class="ev-nav-arrow">›</div>
+          </div>
+
+          <div class="ev-nav-item" id="mod-crono">
+            <div class="ev-nav-icon crono">🕐</div>
+            <div class="ev-nav-body">
+              <div class="ev-nav-title" id="mod-crono-title">Cronograma</div>
+              <div class="ev-nav-sub">Timeline del día</div>
+            </div>
+            <div class="ev-nav-arrow">›</div>
+          </div>
+
+          <div class="ev-nav-item" id="mod-deseos">
+            <div class="ev-nav-icon deseos">💌</div>
+            <div class="ev-nav-body">
+              <div class="ev-nav-title" id="mod-deseos-title">¡Escríbenos algo!</div>
+              <div class="ev-nav-sub">Tus palabras para ellos</div>
+            </div>
+            <div class="ev-nav-arrow">›</div>
+          </div>
+
+          <div class="ev-nav-item" id="mod-mesas">
+            <div class="ev-nav-icon mesas">🪑</div>
+            <div class="ev-nav-body">
+              <div class="ev-nav-title" id="mod-mesas-title">¿Cuál es mi mesa?</div>
+              <div class="ev-nav-sub">Encuentra tu lugar</div>
+            </div>
+            <div class="ev-nav-arrow">›</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- QR block — limpio -->
+      <div class="ev-qr-block">
+        <div class="ev-qr-square" id="qr-square">
+          <div class="ev-qr-pattern" id="qr-pattern"></div>
+          <img id="prev-qr-img" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:4px;">
+        </div>
+        <div class="ev-qr-label">Escanea para unirte</div>
+      </div>
+
+    </div>
+
+    <div style="font-size:11px;color:#2A2820;text-align:center;max-width:300px;line-height:1.6">
+      Este es el link que recibirán tus invitados.<br>Cada cambio se refleja al instante.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── PALETTES ──
+const PALETTES = {
+  boda: {
+    primary: '#7D2935', primaryDark: '#561820', primaryMid: '#A34455', primaryLight: '#F3E8EA',
+    accent: '#9C6B2E', accentLight: '#F7F0E3',
+    surface: '#FAF7F2', surface2: '#F2EBE0', kraft: '#EDE0CB',
+    ink: '#2A1F1A', inkMute: '#9C8878',
+    sageLight: '#EBF0E8',
+  },
+  quince: {
+    primary: '#7B3FA0', primaryDark: '#5B2D8E', primaryMid: '#9B60C0', primaryLight: '#F5EAF8',
+    accent: '#C97DC0', accentLight: '#FBF0FA',
+    surface: '#FDF8FF', surface2: '#F5ECF8', kraft: '#EFE0F0',
+    ink: '#2A1A2E', inkMute: '#9A7AA0',
+    sageLight: '#F0EAF5',
+  },
+  marino: {
+    primary: '#2A4A7F', primaryDark: '#1B2C4E', primaryMid: '#3D6399', primaryLight: '#EAF0FA',
+    accent: '#C4973A', accentLight: '#FBF5E6',
+    surface: '#F8FAFF', surface2: '#EFF2F8', kraft: '#E8EBF2',
+    ink: '#1A1F2E', inkMute: '#7A8AA0',
+    sageLight: '#E8EFF8',
+  },
+  botanico: {
+    primary: '#3D6B20', primaryDark: '#2D5016', primaryMid: '#5A8A35', primaryLight: '#EDF5E8',
+    accent: '#7A9E52', accentLight: '#F2F8EC',
+    surface: '#F8FCF5', surface2: '#EFF5EA', kraft: '#E4EDD8',
+    ink: '#1A2010', inkMute: '#7A8A6A',
+    sageLight: '#E8F0DE',
+  }
+};
+
+let currentPalette = 'boda';
+
+function setPalette(key, btn) {
+  currentPalette = key;
+  document.querySelectorAll('.palette-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const pickers = document.getElementById('custom-pickers');
+  if (key === 'custom') {
+    pickers.style.display = 'flex';
+    updateCustomPalette();
+  } else {
+    pickers.style.display = 'none';
+    applyPalette(key);
+  }
+}
+
+function applyPalette(key) {
+  const p = PALETTES[key];
+  const r = document.documentElement.style;
+  r.setProperty('--ev-primary', p.primary);
+  r.setProperty('--ev-primary-dark', p.primaryDark);
+  r.setProperty('--ev-primary-mid', p.primaryMid);
+  r.setProperty('--ev-primary-light', p.primaryLight);
+  r.setProperty('--ev-accent', p.accent);
+  r.setProperty('--ev-accent-light', p.accentLight);
+  r.setProperty('--ev-surface', p.surface);
+  r.setProperty('--ev-surface2', p.surface2);
+  r.setProperty('--ev-kraft', p.kraft);
+  r.setProperty('--ev-ink', p.ink);
+  r.setProperty('--ev-ink-mute', p.inkMute);
+  r.setProperty('--ev-sage-light', p.sageLight);
+}
+
+// ── CUSTOM PALETTE ──
+function updateCustomPalette() {
+  const c1 = document.getElementById('cp1').value; // primary
+  const c2 = document.getElementById('cp2').value; // accent
+  const c3 = document.getElementById('cp3').value; // kraft/bg
+  const c4 = document.getElementById('cp4').value; // ink
+
+  // Update hex labels
+  document.getElementById('cp1-hex').textContent = c1;
+  document.getElementById('cp2-hex').textContent = c2;
+  document.getElementById('cp3-hex').textContent = c3;
+  document.getElementById('cp4-hex').textContent = c4;
+
+  // Update swatches in the palette button
+  document.getElementById('custom-sw1').style.background = c1;
+  document.getElementById('custom-sw2').style.background = c2;
+  document.getElementById('custom-sw3').style.background = c3;
+
+  // Derive lighter/darker variants automatically
+  const r = document.documentElement.style;
+  r.setProperty('--ev-primary', c1);
+  r.setProperty('--ev-primary-dark', darken(c1, 0.2));
+  r.setProperty('--ev-primary-mid', lighten(c1, 0.15));
+  r.setProperty('--ev-primary-light', lighten(c1, 0.85));
+  r.setProperty('--ev-accent', c2);
+  r.setProperty('--ev-accent-light', lighten(c2, 0.85));
+  r.setProperty('--ev-surface', lighten(c3, 0.5));
+  r.setProperty('--ev-surface2', lighten(c3, 0.2));
+  r.setProperty('--ev-kraft', c3);
+  r.setProperty('--ev-ink', c4);
+  r.setProperty('--ev-ink-mute', lighten(c4, 0.45));
+  r.setProperty('--ev-sage-light', lighten(c3, 0.3));
+}
+
+// Color math helpers
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function darken(hex, amount) {
+  const [r,g,b] = hexToRgb(hex);
+  return rgbToHex(r*(1-amount), g*(1-amount), b*(1-amount));
+}
+function lighten(hex, amount) {
+  const [r,g,b] = hexToRgb(hex);
+  return rgbToHex(r + (255-r)*amount, g + (255-g)*amount, b + (255-b)*amount);
+}
+
+// ── FIELDS → PREVIEW ──
+const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${DIAS[dt.getDay()]} ${d} · ${MESES[m-1]} · ${y}`;
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  const [h, min] = timeStr.split(':').map(Number);
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(min).padStart(2,'0')} ${suffix}`;
+}
+
+function updatePreview() {
+  const names = document.getElementById('f-names').value || 'Nombres';
+  const dateStr = document.getElementById('f-date').value || '';
+  const timeStr = document.getElementById('f-time').value || '';
+  const venue   = document.getElementById('f-venue').value || '';
+
+  document.getElementById('prev-names').textContent = names;
+  document.getElementById('prev-ph-names').innerHTML = names.replace(/&amp;/g,'&').replace(/&/g,'<br>y<br>');
+  const subtitle = document.getElementById('f-subtitle')?.value || '';
+  const dispEl = document.getElementById('prev-display');
+  if (dispEl) { dispEl.textContent = subtitle; dispEl.style.display = subtitle ? '' : 'none'; }
+
+
+  const parts = [formatDate(dateStr), formatTime(timeStr), venue].filter(Boolean);
+  document.getElementById('prev-date').textContent = parts.join(' · ');
+}
+
+// ── GOOGLE FONTS available for events ──
+const AVAILABLE_FONTS = [
+  'Great Vibes', 'Cormorant Garamond', 'Playfair Display',
+  'Dancing Script', 'Italiana', 'Cinzel', 'Libre Baskerville',
+  'Josefin Sans', 'Montserrat', 'EB Garamond', 'Lora',
+  'Satisfy', 'Pinyon Script', 'Petit Formal Script',
+  'Philosopher', 'Spectral', 'Raleway'
+];
+
+let currentPhotoBase64 = null;
+let loadedFonts = new Set(['Great Vibes','Cormorant Garamond','DM Sans','Playfair Display']);
+
+// handlePhoto merged into handleImgUpload
+
+// ── AI FONT SUGGESTION ──
+async function suggestFonts() {
+  if (!currentPhotoBase64) return;
+
+  const btn = document.getElementById('btn-ai-font');
+  const icon = document.getElementById('ai-btn-icon');
+  const txt  = document.getElementById('ai-btn-text');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  icon.textContent = '◌';
+  txt.textContent = 'Analizando imagen…';
+
+  const fontsListStr = AVAILABLE_FONTS.join(', ');
+
+  const prompt = `Eres un experto en diseño tipográfico para eventos sociales (bodas, quinceañeras, graduaciones, eventos corporativos).
+
+Analiza esta imagen de invitación o foto de evento. Observa el estilo visual: colores, ornamentación, nivel de formalidad, época, tipo de evento.
+
+Elige exactamente 3 tipografías de Google Fonts de esta lista para el nombre del evento: ${fontsListStr}
+
+Responde SOLO con JSON válido, sin texto adicional, sin backticks:
+{
+  "fonts": [
+    {
+      "name": "Nombre exacto del font",
+      "label": "Una palabra descriptiva (ej: Elegante, Romántico, Clásico)",
+      "reason": "Una sola frase corta (max 12 palabras) explicando por qué armoniza con la imagen",
+      "top": true
+    },
+    {
+      "name": "Nombre exacto del font",
+      "label": "Una palabra descriptiva",
+      "reason": "Una sola frase corta",
+      "top": false
+    },
+    {
+      "name": "Nombre exacto del font",
+      "label": "Una palabra descriptiva",
+      "reason": "Una sola frase corta",
+      "top": false
+    }
+  ]
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/jpeg', data: currentPhotoBase64 }
+            },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content.find(b => b.type === 'text')?.text || '';
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    renderFontCards(parsed.fonts);
+
+  } catch(err) {
+    console.error(err);
+    txt.textContent = 'Error al analizar. Intenta de nuevo.';
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    icon.textContent = '✦';
+    return;
+  }
+
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  icon.textContent = '✦';
+  txt.textContent = 'Volver a analizar';
+}
+
+async function loadGoogleFont(fontName) {
+  if (loadedFonts.has(fontName)) return;
+  const url = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName) + ':wght@400;600&display=swap';
+  const link = document.createElement('link');
+  link.rel = 'stylesheet'; link.href = url;
+  document.head.appendChild(link);
+  loadedFonts.add(fontName);
+  // small delay so font loads before rendering sample
+  await new Promise(r => setTimeout(r, 600));
+}
+
+async function renderFontCards(fonts) {
+  const container = document.getElementById('font-cards');
+  const resultsDiv = document.getElementById('font-results');
+  container.innerHTML = '<div style="font-size:12px;color:var(--admin-mute);padding:8px 0;">Cargando tipografías…</div>';
+  resultsDiv.style.display = 'flex';
+
+  // Load all fonts first
+  await Promise.all(fonts.map(f => loadGoogleFont(f.name)));
+
+  container.innerHTML = fonts.map((f, i) => `
+    <div class="font-card" onclick="selectFont('${f.name.replace(/'/g,"\'")}', this)" data-font="${f.name}">
+      <div class="font-card-name">
+        ${f.label}
+        <span class="font-card-badge ${f.top ? 'badge-top' : 'badge-alt'}">${f.top ? '✦ Recomendada' : 'Alternativa'}</span>
+      </div>
+      <div class="font-card-sample" style="font-family:'${f.name}',serif;">
+        ${document.getElementById('f-names').value || 'Tu Evento'}
+      </div>
+      <div class="font-card-reason">${f.reason}</div>
+    </div>
+  `).join('');
+}
+
+function selectFont(fontName, card) {
+  document.querySelectorAll('.font-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.font-opt').forEach(b => b.classList.remove('selected'));
+  card.classList.add('selected');
+  currentFont = fontName;
+  applyFontToPreview(fontName);
+}
+
+// ── MODULES ──
+function toggleModule(id, active) {
+  const row = document.querySelector(`.module-row[data-module="${id}"]`);
+  const mod = document.getElementById('mod-' + id);
+  row.classList.toggle('active', active);
+  if (mod) mod.style.display = active ? '' : 'none';
+}
+
+function updateModuleLabel(id, value) {
+  const el = document.getElementById('mod-' + id + '-title');
+  if (el) el.textContent = value || '—';
+}
+
+// ── SAVE FEEDBACK ──
+function showSaved() {
+  const msg = document.getElementById('saved-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2500);
+}
+
+// ── TYPOGRAPHY CATALOG ──
+const FONT_OPTIONS = [
+  'Great Vibes','Cormorant Garamond','Playfair Display','Dancing Script',
+  'Cinzel','Josefin Sans','Lora','Satisfy','Italiana','EB Garamond',
+  'Raleway','Montserrat','Spectral','Philosopher','Pinyon Script'
+];
+
+// Central typography state — this is what gets saved to Supabase events.config.typography
+let typography = {
+  title:   { font: 'Great Vibes',        size: 56, bold: false, caps: false },
+  display: { font: 'Cormorant Garamond', size: 18, bold: true,  caps: false },
+  caption: { font: 'DM Sans',            size: 11, bold: false, caps: true  },
+  label:   { font: 'Cormorant Garamond', size: 13, bold: true,  caps: false },
+};
+
+const TYPO_ROLES = [
+  { key: 'title',   label: 'Título',   previewId: 'prev-names',   sampleText: 'Graduación UAC 2018-2026' },
+  { key: 'display', label: 'Display',  previewId: 'prev-display', sampleText: 'Ceremonia de Titulación 2026' },
+  { key: 'caption', label: 'Caption',  previewId: 'prev-date',    sampleText: 'Mié 1 · Julio · 2026' },
+  { key: 'label',   label: 'Label',    previewId: 'mod-fotos-title', sampleText: 'Sube tus fotos' },
+];
+
+let selectedTypoRole = 'title';
+let currentFont = 'Great Vibes'; // kept for AI compat
+
+function initTypoTable() {
+  // Load all fonts
+  const all = [...new Set([...FONT_OPTIONS, 'DM Sans'])];
+  const families = all.map(f => `family=${encodeURIComponent(f)}:ital,wght@0,400;0,600;1,400`).join('&');
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+  document.head.appendChild(link);
+
+  renderTypoTable();
+}
+
+function renderTypoTable() {
+  const tbody = document.getElementById('typo-tbody');
+  tbody.innerHTML = TYPO_ROLES.map(role => {
+    const t = typography[role.key];
+    const fontOpts = FONT_OPTIONS.map(f =>
+      `<option value="${f}" ${f === t.font ? 'selected' : ''}>${f}</option>`
+    ).join('');
+    return `
+    <tr class="typo-row ${selectedTypoRole === role.key ? 'typo-row-active' : ''}"
+        id="typo-row-${role.key}"
+        onclick="selectTypoRole('${role.key}')">
+      <td><span class="typo-role-badge">${role.label}</span></td>
+      <td class="typo-sample-cell">
+        <div class="typo-sample" id="typo-sample-${role.key}"
+          style="font-family:'${t.font}',serif;font-size:${Math.min(t.size,18)}px;font-weight:${t.bold?700:400};text-transform:${t.caps?'uppercase':'none'}">
+          ${role.sampleText}
+        </div>
+      </td>
+      <td style="min-width:120px;" onclick="event.stopPropagation()">
+        <div class="font-picker-wrap" id="fp-wrap-${role.key}">
+          <button class="font-picker-btn" id="fp-btn-${role.key}"
+            onclick="toggleFontPicker('${role.key}')">
+            <span class="font-picker-current" id="fp-current-${role.key}"
+              style="font-family:'${t.font}',serif">${t.font.split(' ')[0]}</span>
+            <span class="font-picker-caret">▼</span>
+          </button>
+          <div class="font-picker-panel" id="fp-panel-${role.key}">
+            ${FONT_OPTIONS.map(f => `
+              <div class="font-picker-option ${f === t.font ? 'selected' : ''}"
+                onclick="pickFont('${role.key}', '${f}')">
+                <div class="font-picker-opt-sample" style="font-family:'${f}',serif">${role.sampleText.substring(0,12)}</div>
+                <div class="font-picker-opt-name">${f}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </td>
+      <td>
+        <input type="number" class="typo-size-input" value="${t.size}" min="8" max="96"
+          onchange="updateTypo('${role.key}','size',+this.value)" onclick="event.stopPropagation()">
+      </td>
+      <td>
+        <button class="typo-toggle-btn ${t.bold ? 'active' : ''}"
+          id="bold-btn-${role.key}"
+          onclick="event.stopPropagation();toggleTypoProp('${role.key}','bold')">B</button>
+      </td>
+      <td>
+        <button class="typo-caps-btn ${t.caps ? 'active' : ''}"
+          id="caps-btn-${role.key}"
+          onclick="event.stopPropagation();toggleTypoProp('${role.key}','caps')">AA</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Highlight selected row
+  document.querySelectorAll('.typo-row').forEach(r => r.style.background = '');
+  const activeRow = document.getElementById(`typo-row-${selectedTypoRole}`);
+  if (activeRow) activeRow.style.background = 'rgba(196,151,58,0.07)';
+}
+
+function selectTypoRole(key) {
+  selectedTypoRole = key;
+  currentFont = typography[key].font;
+  document.querySelectorAll('.typo-row').forEach(r => r.style.background = '');
+  const row = document.getElementById(`typo-row-${key}`);
+  if (row) row.style.background = 'rgba(196,151,58,0.07)';
+  // Update AI hint
+  const roleLabel = TYPO_ROLES.find(r=>r.key===key)?.label || key;
+  document.getElementById('ai-role-hint').style.display = 'none';
+  if (document.getElementById('btn-ai-font').style.display !== 'none') {
+    document.getElementById('font-results-label').textContent = `Tipografías recomendadas para "${roleLabel}"`;
+  }
+}
+
+function updateTypo(key, prop, val) {
+  typography[key][prop] = val;
+  updateTypoSample(key);
+  applyTypoToPreview(key);
+}
+
+function toggleTypoProp(key, prop) {
+  typography[key][prop] = !typography[key][prop];
+  const btnId = prop === 'bold' ? `bold-btn-${key}` : `caps-btn-${key}`;
+  document.getElementById(btnId)?.classList.toggle('active', typography[key][prop]);
+  updateTypoSample(key);
+  applyTypoToPreview(key);
+}
+
+function updateTypoSample(key) {
+  const t = typography[key];
+  const sample = document.getElementById(`typo-sample-${key}`);
+  if (!sample) return;
+  sample.style.fontFamily = `'${t.font}', serif`;
+  sample.style.fontSize = Math.min(t.size, 18) + 'px';
+  sample.style.fontWeight = t.bold ? 700 : 400;
+  sample.style.textTransform = t.caps ? 'uppercase' : 'none';
+}
+
+function applyTypoToPreview(key) {
+  const t = typography[key];
+
+  const applyStyle = (el) => {
+    if (!el) return;
+    el.style.fontFamily = `'${t.font}', serif`;
+    el.style.fontSize = t.size + 'px';
+    el.style.fontWeight = t.bold ? 700 : 400;
+    el.style.textTransform = t.caps ? 'uppercase' : 'none';
+  };
+
+  if (key === 'title') {
+    // Applies to main name + placeholder
+    applyStyle(document.getElementById('prev-names'));
+    applyStyle(document.getElementById('prev-ph-names'));
+  }
+
+  if (key === 'display') {
+    // Applies to the display subtitle line
+    applyStyle(document.getElementById('prev-display'));
+  }
+
+  if (key === 'caption') {
+    // Applies to date/venue line
+    applyStyle(document.getElementById('prev-date'));
+  }
+
+  if (key === 'label') {
+    // Applies to ALL module nav titles
+    document.querySelectorAll('.ev-nav-title').forEach(applyStyle);
+  }
+}
+
+function applyFontToPreview(fontName) {
+  // Called from AI font cards — applies to currently selected role
+  updateTypo(selectedTypoRole, 'font', fontName);
+  // Sync the select in the table
+  const sel = document.querySelector(`#typo-row-${selectedTypoRole} .typo-select`);
+  if (sel) sel.value = fontName;
+}
+
+function initFontSelector() { initTypoTable(); } // alias for compat
+
+// ── QR PLACEHOLDER ──
+function renderQRPlaceholder() {
+  const pattern = document.getElementById('qr-pattern');
+  if (!pattern) return;
+  // Deterministic pseudo-QR visual
+  const cells = Array.from({length: 49}, (_, i) => {
+    // Corner finder patterns
+    const row = Math.floor(i/7), col = i%7;
+    const inCorner = (row<3&&col<3)||(row<3&&col>3)||(row>3&&col<3);
+    const onBorder = row===0||row===6||col===0||col===6;
+    const isCenter = row===3&&col===3;
+    if (inCorner && onBorder) return true;
+    if (inCorner && row===1&&col===1) return true;
+    if (inCorner && row===1&&col===5) return true;
+    if (inCorner && row===5&&col===1) return true;
+    return Math.sin(i*7.3+row*3.1)*Math.cos(col*2.7+i)>0.1;
+  });
+  pattern.innerHTML = cells.map(on =>
+    `<div class="ev-qr-cell" style="background:${on?'#1a1a1a':'#f8f8f8'}"></div>`
+  ).join('');
+}
+
+// ── UNIFIED IMAGE MANAGER ──
+const IMG_TYPES = {
+  logo: {
+    icon: '🏷', title: 'Subir logo', sub: 'PNG · JPG · SVG',
+    tip: '💡 Para mejor resultado usa PNG con fondo transparente',
+    resizeIcon: '⊞', resizeMin: 32, resizeMax: 96, resizeDefault: 52, resizeUnit: 'px',
+  },
+  invitacion: {
+    icon: '🖼', title: 'Subir invitación / foto principal', sub: 'JPG · PNG · máx 5MB',
+    tip: null, resizeIcon: '↔', resizeMin: 80, resizeMax: 200, resizeDefault: 140, resizeUnit: '',
+  },
+  qr: {
+    icon: '📲', title: 'Subir QR del evento', sub: 'PNG · JPG · SVG',
+    tip: '💡 Genera tu QR en qr.io o qr-code-generator.com',
+    resizeIcon: '⊞', resizeMin: 80, resizeMax: 200, resizeDefault: 140, resizeUnit: 'px',
+  },
+  otra: {
+    icon: '➕', title: 'Subir otra imagen', sub: 'PNG · JPG · SVG',
+    tip: null, resizeIcon: '⊞', resizeMin: 40, resizeMax: 200, resizeDefault: 100, resizeUnit: 'px',
+  },
+};
+
+let currentImgTab = 'logo';
+const imgStore = { logo: null, invitacion: null, qr: null, otra: null };
+const imgSizes = { logo: 52, invitacion: 140, qr: 80, otra: 100 };
+
+function switchImgTab(type) {
+  currentImgTab = type;
+  const cfg = IMG_TYPES[type];
+  // Update tabs
+  Object.keys(IMG_TYPES).forEach(t => {
+    document.getElementById('img-tab-' + t)?.classList.toggle('active', t === type);
+  });
+  // Update upload zone
+  document.getElementById('img-zone-icon').textContent = cfg.icon;
+  document.getElementById('img-zone-title').textContent = cfg.title;
+  document.getElementById('img-zone-sub').textContent = cfg.sub;
+  const tipEl = document.getElementById('img-zone-tip');
+  if (cfg.tip) { tipEl.textContent = cfg.tip; tipEl.style.display = ''; }
+  else { tipEl.style.display = 'none'; }
+  // Update upload zone state
+  const zone = document.getElementById('img-upload-zone');
+  zone.classList.toggle('has-image', !!imgStore[type]);
+  // Reset file input
+  document.getElementById('f-img-input').value = '';
+  // Update slider
+  const sz = imgSizes[type];
+  const sl = document.getElementById('img-size-slider');
+  sl.min = cfg.resizeMin; sl.max = cfg.resizeMax; sl.value = sz;
+  document.getElementById('img-resize-icon').textContent = cfg.resizeIcon;
+  const label = cfg.resizeUnit === 'px' ? sz + 'px' : sizeLabel(type, sz);
+  document.getElementById('img-size-val').textContent = label;
+  updateSliderTrack('img-size-slider');
+  const resizeRow = document.getElementById('img-resize-row');
+  resizeRow.classList.toggle('visible', !!imgStore[type]);
+}
+
+function handleImgUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const type = currentImgTab;
+  imgStore[type] = url;
+
+  // Update thumb strip
+  const thumb = document.getElementById('thumb-' + type);
+  const wrap = document.getElementById('thumb-wrap-' + type);
+  thumb.src = url; thumb.classList.add('loaded');
+  wrap.classList.add('loaded');
+
+  // Mark tab as has-image
+  document.getElementById('img-tab-' + type)?.classList.add('has-image');
+  document.getElementById('img-upload-zone').classList.add('has-image');
+
+  // Show resize slider
+  document.getElementById('img-resize-row').classList.add('visible');
+  updateSliderTrack('img-size-slider');
+
+  // Apply to preview
+  applyImgToPreview(type, url, imgSizes[type]);
+
+  // Store base64 for AI (invitacion only)
+  if (type === 'invitacion') {
+    const reader = new FileReader();
+    reader.onload = ev => { currentPhotoBase64 = ev.target.result.split(',')[1]; };
+    reader.readAsDataURL(file);
+    const aibtn = document.getElementById('btn-ai-font');
+    if (aibtn) aibtn.style.display = 'flex';
+  }
+}
+
+function resizeImg(val) {
+  const type = currentImgTab;
+  imgSizes[type] = +val;
+  const cfg = IMG_TYPES[type];
+  const label = cfg.resizeUnit === 'px' ? val + 'px' : sizeLabel(type, +val);
+  document.getElementById('img-size-val').textContent = label;
+  updateSliderTrack('img-size-slider');
+
+  if (type === 'qr') {
+    // Always resize QR square even without uploaded image (affects placeholder too)
+    const square = document.getElementById('qr-square');
+    square.style.width = val + 'px';
+    square.style.height = val + 'px';
+    if (imgStore[type]) applyImgToPreview(type, imgStore[type], +val);
+  } else if (imgStore[type]) {
+    applyImgToPreview(type, imgStore[type], +val);
+  }
+}
+
+function sizeLabel(type, val) {
+  if (type === 'invitacion') {
+    if (val < 100) return 'estrecha'; if (val > 170) return 'ancha'; return 'normal';
+  }
+  return val + 'px';
+}
+
+function applyImgToPreview(type, url, size) {
+  if (type === 'logo') {
+    const el = document.getElementById('prev-logo');
+    el.src = url; el.style.display = 'block';
+    el.style.width = size + 'px'; el.style.height = size + 'px';
+  } else if (type === 'invitacion') {
+    const img = document.getElementById('prev-inv-img');
+    const ph  = document.getElementById('prev-inv-placeholder');
+    img.src = url; img.style.display = 'block'; ph.style.display = 'none';
+    const flex = (size / 140) * 1.4;
+    document.getElementById('prev-inv-wrap').style.flex = flex.toFixed(2);
+  } else if (type === 'qr') {
+    const pattern = document.getElementById('qr-pattern');
+    const qrImg = document.getElementById('prev-qr-img');
+    const square = document.getElementById('qr-square');
+    // Hide pattern, show uploaded image
+    pattern.style.display = 'none';
+    qrImg.src = url;
+    qrImg.style.display = 'block';
+    // Resize the square — both width and height together
+    square.style.width = size + 'px';
+    square.style.height = size + 'px';
+  }
+}
+
+// Kept for compat — now unused but don't break AI flow
+function handlePhoto(e) { }
+function resizeLogo(val) { }
+function resizePhoto(val) { }
+function toggleLogo(active) { }
+function handleLogo(e) { }
+function handleQR(e) { }
+
+// ── QR IMAGE ──
+function handleQR(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  // Panel preview
+  const qrPrev = document.getElementById('qr-preview-img');
+  qrPrev.src = url; qrPrev.style.display = 'block';
+  // Preview block — hide pattern, show image
+  const pattern = document.getElementById('qr-pattern');
+  const qrImg = document.getElementById('prev-qr-img');
+  pattern.style.display = 'none';
+  qrImg.src = url; qrImg.style.display = 'block';
+  // Resize square to fit image
+  document.getElementById('qr-square').style.background = 'white';
+}
+
+// resizePhoto merged into resizeImg
+
+function updateSliderTrack(id) {
+  const sl = document.getElementById(id);
+  if (!sl) return;
+  const pct = ((sl.value - sl.min) / (sl.max - sl.min) * 100).toFixed(1);
+  sl.style.setProperty('--pct', pct + '%');
+}
+
+// ── FONT PICKER ──
+let openFontPicker = null;
+
+function toggleFontPicker(key) {
+  // Close any open picker
+  if (openFontPicker && openFontPicker !== key) closeFontPicker(openFontPicker);
+  const btn = document.getElementById('fp-btn-' + key);
+  const panel = document.getElementById('fp-panel-' + key);
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    closeFontPicker(key);
+  } else {
+    btn.classList.add('open');
+    panel.classList.add('open');
+    openFontPicker = key;
+    // Scroll selected option into view
+    const sel = panel.querySelector('.font-picker-option.selected');
+    if (sel) setTimeout(() => sel.scrollIntoView({ block: 'nearest' }), 50);
+  }
+}
+
+function closeFontPicker(key) {
+  document.getElementById('fp-btn-' + key)?.classList.remove('open');
+  document.getElementById('fp-panel-' + key)?.classList.remove('open');
+  if (openFontPicker === key) openFontPicker = null;
+}
+
+function pickFont(key, fontName) {
+  updateTypo(key, 'font', fontName);
+  // Update button label with preview
+  const cur = document.getElementById('fp-current-' + key);
+  if (cur) { cur.textContent = fontName.split(' ')[0]; cur.style.fontFamily = `'${fontName}', serif`; }
+  // Update selected state in panel
+  const panel = document.getElementById('fp-panel-' + key);
+  if (panel) {
+    panel.querySelectorAll('.font-picker-option').forEach(o => o.classList.remove('selected'));
+    const opts = panel.querySelectorAll('.font-picker-option');
+    opts.forEach(o => { if (o.querySelector('.font-picker-opt-name')?.textContent === fontName) o.classList.add('selected'); });
+  }
+  closeFontPicker(key);
+}
+
+// Close picker on outside click
+document.addEventListener('click', () => {
+  if (openFontPicker) closeFontPicker(openFontPicker);
+});
+
+// Init
+updatePreview();
+initFontSelector();
+renderQRPlaceholder();
+</script>
+</body>
+</html>
