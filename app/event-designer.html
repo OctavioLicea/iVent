@@ -1327,6 +1327,23 @@ async function loadEvent(){
     selectedBg='custom';
   }
 
+  // ── Ajuste de invitación ──
+  if(cfg.inv_fit){
+    currentInvFit=cfg.inv_fit;
+    setInvFit(cfg.inv_fit);
+  }
+  if(cfg.inv_size){
+    const size=cfg.inv_size;
+    const slider=document.getElementById('inv-size-slider');
+    if(slider){
+      slider.value=size;
+      const pct=((size-80)/(220-80)*100).toFixed(1);
+      slider.style.setProperty('--pct',pct+'%');
+      document.getElementById('inv-size-val').textContent=size;
+      document.getElementById('prev-inv-wrap').style.flex=((size/140)*1.4).toFixed(2);
+    }
+  }
+
   // ── Frames — soporta formato nuevo {color,on} y viejo string ──
   if(cfg.frames){
     const fm=cfg.frames;
@@ -1435,6 +1452,8 @@ async function saveEvent(){
       palette,
       typography,
       modules,
+      inv_fit:currentInvFit,
+      inv_size:parseInt(document.getElementById('inv-size-slider')?.value||140),
       frames:{
         inv:{color:frameColors.inv,on:frameOn.inv},
         nav:{color:frameColors.nav,on:frameOn.nav},
