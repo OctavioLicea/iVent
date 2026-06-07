@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iVent — Mis eventos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-size: 15px; }
+
+:root {
+  --gold: #C4973A;
+  --gold-light: #F5EDD8;
+  --gold-dark: #9C7520;
+  --ink: #1A1714;
+  --ink-mid: #4A4540;
+  --ink-mute: #8A837A;
+  --border: #E8E4DE;
+  --border-strong: #D0C9C0;
+  --surface: #FFFFFF;
+  --surface-warm: #FDFAF6;
+  --surface-card: #FDFAF6;
+  --red: #C0392B;
+  --red-light: #FDF0EF;
+  --green: #2D7A4F;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font: 'DM Sans', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--surface-warm);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPNAV ── */
+.topnav {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  text-decoration: none;
+}
+.logo span { color: var(--gold); }
+.topnav-sep { width: 1px; height: 20px; background: var(--border); }
+.topnav-label { font-size: 13px; color: var(--ink-mute); }
+.topnav-spacer { flex: 1; }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  background: transparent;
+  font-family: var(--font);
+}
+.user-chip:hover { border-color: var(--border-strong); background: var(--surface-warm); }
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--gold-dark);
+  flex-shrink: 0;
+}
+.user-email { font-size: 12px; color: var(--ink-mid); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.btn-logout {
+  font-size: 12px;
+  color: var(--ink-mute);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  transition: color .15s, background .15s;
+}
+.btn-logout:hover { color: var(--red); background: var(--red-light); }
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+}
+.page-sub {
+  font-size: 13px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+}
+
+.btn-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--gold);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn-new:hover { background: var(--gold-dark); }
+.btn-new:active { transform: scale(.98); }
+
+/* ── EVENT GRID ── */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ── EVENT CARD ── */
+.event-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+.event-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(196,151,58,0.1);
+  transform: translateY(-2px);
+}
+
+.card-type-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.card-type-icon { font-size: 14px; }
+
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+.card-status.draft { background: #F1EFE8; color: #8A837A; }
+.card-status.announced { background: #EAF0FA; color: #185FA5; }
+.card-status.live {
+  background: rgba(45,122,79,0.1);
+  color: var(--green);
+}
+.card-status.live::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+.card-status.closed { background: #F1EFE8; color: #8A837A; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.card-name {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+.card-title {
+  font-size: 12px;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+.card-meta-icon { font-size: 13px; flex-shrink: 0; }
+
+.card-arrow {
+  position: absolute;
+  right: 18px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--border-strong);
+  transition: color .15s, transform .15s;
+}
+.event-card:hover .card-arrow {
+  color: var(--gold);
+  transform: translateY(-50%) translateX(2px);
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-icon { font-size: 48px; margin-bottom: 4px; opacity: .5; }
+.empty-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.empty-sub { font-size: 14px; color: var(--ink-mute); line-height: 1.6; max-width: 300px; }
+
+/* ── LOADING SKELETON ── */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.skel {
+  background: linear-gradient(90deg, #F0EDE8 25%, #FAF7F4 50%, #F0EDE8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,23,20,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  position: relative;
+}
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.modal-sub { font-size: 13px; color: var(--ink-mute); margin-top: 3px; }
+.modal-close {
+  background: none; border: none;
+  font-size: 20px; color: var(--ink-mute);
+  cursor: pointer; padding: 2px 6px;
+  border-radius: var(--radius);
+  transition: background .15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.modal-close:hover { background: var(--surface-warm); color: var(--ink); }
+
+.modal-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* Form inside modal */
+.mfield { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.mfield:last-of-type { margin-bottom: 0; }
+.mfield label { font-size: 12px; font-weight: 500; color: var(--ink-mid); letter-spacing: .02em; }
+.mfield input, .mfield select {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.mfield input:focus, .mfield select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(196,151,58,0.1);
+}
+.mfield input::placeholder { color: var(--ink-mute); opacity: .6; }
+.mfield select { cursor: pointer; }
+.mfield .hint { font-size: 11px; color: var(--ink-mute); }
+
+.mfields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.type-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  background: transparent;
+  font-family: var(--font);
+}
+.type-opt:hover { border-color: var(--border-strong); }
+.type-opt.selected { border-color: var(--gold); background: var(--gold-light); }
+.type-icon { font-size: 20px; }
+.type-label { font-size: 10px; font-weight: 600; color: var(--ink-mute); letter-spacing: .03em; }
+.type-opt.selected .type-label { color: var(--gold-dark); }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+.btn-cancel {
+  padding: 10px 18px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.btn-cancel:hover { border-color: var(--border-strong); background: var(--surface-warm); }
+.btn-create {
+  padding: 10px 22px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-create:hover { background: var(--gold-dark); }
+.btn-create:disabled { opacity: .6; cursor: not-allowed; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+.btn-create.loading .spinner { display: block; }
+.btn-create.loading .btn-label { display: none; }
+
+.alert-modal {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--red-light);
+  color: var(--red);
+  border: 1px solid rgba(192,57,43,0.15);
+  margin-bottom: 16px;
+}
+.alert-modal.visible { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- ── TOPNAV ── -->
+<nav class="topnav">
+  <a href="events.html" class="logo">i<span>V</span>ent</a>
+  <div class="topnav-sep"></div>
+  <span class="topnav-label">Mis eventos</span>
+  <div class="topnav-spacer"></div>
+  <div class="user-chip" id="user-chip">
+    <div class="user-avatar" id="user-avatar">?</div>
+    <span class="user-email" id="user-email">Cargando…</span>
+  </div>
+  <button class="btn-logout" onclick="handleLogout()">Cerrar sesión</button>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mis eventos</div>
+      <div class="page-sub" id="events-count">Cargando…</div>
+    </div>
+    <button class="btn-new" onclick="openModal()">+ Nuevo evento</button>
+  </div>
+
+  <div class="events-grid" id="events-grid">
+    <!-- Skeletons mientras carga -->
+    <div class="skeleton-card">
+      <div class="skel" style="height:12px;width:60px"></div>
+      <div class="skel" style="height:22px;width:80%"></div>
+      <div class="skel" style="height:12px;width:50%"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel" style="height:12px;width:60px"></div>
+      <div class="skel" style="height:22px;width:70%"></div>
+      <div class="skel" style="height:12px;width:55%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: NUEVO EVENTO ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Nuevo evento</div>
+        <div class="modal-sub">Completa los datos básicos para comenzar.</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="alert-modal" id="modal-alert">
+      <span>⚠</span><span id="modal-alert-msg">Error al crear el evento.</span>
+    </div>
+
+    <!-- Tipo -->
+    <div class="mfield">
+      <label>Tipo de evento</label>
+      <div class="type-grid" id="type-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Identidad -->
+    <div class="mfield">
+      <label>Nombre del evento <span style="color:var(--gold)">*</span></label>
+      <input type="text" id="new-name" placeholder="Ej: Boda Nydia & Octavio">
+    </div>
+    <div class="mfield">
+      <label>Título visible</label>
+      <input type="text" id="new-title" placeholder="Ej: Nydia & Octavio">
+      <span class="hint">Aparece en grande en la invitación</span>
+    </div>
+    <div class="mfield">
+      <label>Subtítulo <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+      <input type="text" id="new-subtitle" placeholder="Ej: Ceremonia de Titulación 2026">
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Fechas y hora -->
+    <div class="mfields-row">
+      <div class="mfield">
+        <label>Fecha del evento <span style="color:var(--gold)">*</span></label>
+        <input type="date" id="new-date">
+      </div>
+      <div class="mfield">
+        <label>Hora de inicio</label>
+        <input type="time" id="new-time" value="19:00">
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Fecha fin <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+      <input type="date" id="new-date-end">
+      <span class="hint">Para eventos de varios días</span>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Lugar -->
+    <div class="mfield">
+      <label>Venue / lugar</label>
+      <input type="text" id="new-venue" placeholder="Nombre del lugar">
+    </div>
+    <div class="mfield">
+      <label>URL Google Maps <span style="font-weight:400;opacity:.6">(opcional)</span></label>
+      <input type="url" id="new-venue-url" placeholder="https://maps.google.com/...">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-create" id="btn-create" onclick="handleCreateEvent()">
+        <span class="btn-label">Crear evento</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://qoaxifnrlxxwwdzqxmot.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvYXhpZm5ybHh4d3dkenF4bW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MDY5MTUsImV4cCI6MjA5NDI4MjkxNX0.kW9xOfMslcra92rcxe9Jz4vspsmen4jNuxdVc_29z9Q';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ──
+let currentUser = null;
+let eventTypes = [];
+let selectedTypeId = 1;
+
+// ── AUTH GUARD ──
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.replace('login.html'); return; }
+  currentUser = session.user;
+  renderUserChip(currentUser.email);
+  await loadEventTypes();
+  await loadEvents();
+}
+
+function renderUserChip(email) {
+  const initials = email.substring(0, 2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-email').textContent = email;
+}
+
+// ── LOGOUT ──
+async function handleLogout() {
+  await sb.auth.signOut();
+  window.location.replace('login.html');
+}
+
+// ── LOAD EVENT TYPES ──
+async function loadEventTypes() {
+  const { data, error } = await sb.from('event_types').select('*').order('id');
+  if (error || !data) return;
+  eventTypes = data;
+  renderTypeGrid();
+}
+
+function renderTypeGrid() {
+  const grid = document.getElementById('type-grid');
+  grid.innerHTML = eventTypes.map(t => `
+    <button class="type-opt ${t.id === selectedTypeId ? 'selected' : ''}"
+      onclick="selectType(${t.id})" id="type-opt-${t.id}">
+      <span class="type-icon">${t.icon}</span>
+      <span class="type-label">${t.label}</span>
+    </button>
+  `).join('');
+}
+
+function selectType(id) {
+  selectedTypeId = id;
+  document.querySelectorAll('.type-opt').forEach(el => el.classList.remove('selected'));
+  document.getElementById('type-opt-' + id)?.classList.add('selected');
+}
+
+// ── LOAD EVENTS ──
+async function loadEvents() {
+  const { data, error } = await sb
+    .from('events')
+    .select('*, event_types(slug, label, icon)')
+    .eq('created_by', currentUser.id)
+    .order('fecha_inicio', { ascending: true });
+
+  const grid = document.getElementById('events-grid');
+
+  if (error) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error al cargar</div><div class="empty-sub">${error.message}</div></div>`;
+    return;
+  }
+
+  const count = data?.length || 0;
+  document.getElementById('events-count').textContent =
+    count === 0 ? 'Aún no tienes eventos' :
+    count === 1 ? '1 evento' : `${count} eventos`;
+
+  if (!data || count === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">Crea tu primer evento</div>
+        <div class="empty-sub">Todo empieza con un link. Crea tu evento y compártelo con tus invitados en minutos.</div>
+        <button class="btn-new" style="margin-top:16px" onclick="openModal()">+ Nuevo evento</button>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = data.map(ev => renderEventCard(ev)).join('');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  return `${dias[dt.getDay()]} ${d} ${meses[m-1]} ${y}`;
+}
+
+function getStatus(ev) {
+  const now = new Date();
+  const start = ev.fecha_inicio ? new Date(ev.fecha_inicio) : null;
+  const end = ev.fecha_fin ? new Date(ev.fecha_fin) : start;
+  if (!start) return { key: 'draft', label: 'Borrador' };
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = end ? new Date(end.getFullYear(), end.getMonth(), end.getDate()) : startDay;
+  if (today < startDay) return { key: 'announced', label: 'Próximo' };
+  if (today >= startDay && today <= endDay) return { key: 'live', label: 'En vivo' };
+  return { key: 'closed', label: 'Finalizado' };
+}
+
+function renderEventCard(ev) {
+  const type = ev.event_types || { icon: '🎉', label: 'Evento' };
+  const status = getStatus(ev);
+  const dateStr = formatDate(ev.fecha_inicio);
+  const venue = ev.lugar || '';
+
+  return `
+    <div class="event-card" onclick="openEvent('${ev.id}')">
+      <div class="card-type-row">
+        <div class="card-type-badge">
+          <span class="card-type-icon">${type.icon}</span>
+          ${type.label}
+        </div>
+        <div class="card-status ${status.key}">${status.label}</div>
+      </div>
+      <div>
+        <div class="card-name">${ev.nombre}</div>
+        ${ev.titulo ? `<div class="card-title">${ev.titulo}</div>` : ''}
+      </div>
+      <div class="card-meta">
+        ${dateStr ? `<div class="card-meta-row"><span class="card-meta-icon">📅</span>${dateStr}</div>` : ''}
+        ${venue ? `<div class="card-meta-row"><span class="card-meta-icon">📍</span>${venue}</div>` : ''}
+      </div>
+      <span class="card-arrow">›</span>
+    </div>`;
+}
+
+function openEvent(eventId) {
+  // Guardamos el event_id en sessionStorage para que la consola lo lea
+  sessionStorage.setItem('ivent_event_id', eventId);
+  window.location.href = 'prototype/ivent-admin-proto.html';
+}
+
+// ── MODAL ──
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('new-name').focus();
+  hideModalAlert();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  clearModalForm();
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function clearModalForm() {
+  ['new-name','new-title','new-subtitle','new-date','new-time','new-date-end','new-venue','new-venue-url']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = id === 'new-time' ? '19:00' : ''; });
+  selectedTypeId = 1;
+  renderTypeGrid();
+  hideModalAlert();
+}
+
+function hideModalAlert() {
+  document.getElementById('modal-alert').classList.remove('visible');
+}
+
+// ── CREATE EVENT ──
+async function handleCreateEvent() {
+  const name = document.getElementById('new-name').value.trim();
+  const startDate = document.getElementById('new-date').value;
+
+  hideModalAlert();
+
+  if (!name || !startDate) {
+    document.getElementById('modal-alert-msg').textContent = 'El nombre y la fecha son obligatorios.';
+    document.getElementById('modal-alert').classList.add('visible');
+    return;
+  }
+
+  const btn = document.getElementById('btn-create');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const payload = {
+    created_by: currentUser.id,
+    nombre: name,
+    titulo: document.getElementById('new-title').value.trim() || null,
+    subtitulo: document.getElementById('new-subtitle').value.trim() || null,
+    tipo_id: selectedTypeId,
+    fecha_inicio: startDate,
+    fecha_fin: document.getElementById('new-date-end').value || null,
+    hora_inicio: document.getElementById('new-time').value || null,
+    lugar: document.getElementById('new-venue').value.trim() || null,
+    url_lugar: document.getElementById('new-venue-url').value.trim() || null,
+    config: {}
+  };
+
+  const { data, error } = await sb.from('events').insert(payload).select().single();
+
+  btn.classList.remove('loading');
+  btn.disabled = false;
+
+  if (error) {
+    document.getElementById('modal-alert-msg').textContent = error.message;
+    document.getElementById('modal-alert').classList.add('visible');
+    return;
+  }
+
+  // Evento creado — ir directo a la consola
+  sessionStorage.setItem('ivent_event_id', data.id);
+  window.location.href = 'prototype/ivent-admin-proto.html';
+}
+
+// ── ESCAPE KEY ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
