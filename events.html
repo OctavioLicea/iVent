@@ -93,13 +93,10 @@ body {
   padding: 5px 10px 5px 6px;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 30px;
-  cursor: pointer;
-  transition: border-color .15s, background .15s;
   background: transparent;
   font-family: var(--font);
   position: relative; z-index: 1;
 }
-.user-chip:hover { border-color: rgba(196,151,58,0.4); background: rgba(255,255,255,0.04); }
 .user-avatar {
   width: 26px; height: 26px;
   border-radius: 50%;
@@ -379,7 +376,6 @@ body {
 
 .modal-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
-/* Form inside modal */
 .mfield { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
 .mfield:last-of-type { margin-bottom: 0; }
 .mfield label { font-size: 12px; font-weight: 500; color: var(--ink-mid); letter-spacing: .02em; }
@@ -510,7 +506,6 @@ body {
   </div>
 
   <div class="events-grid" id="events-grid">
-    <!-- Skeletons mientras carga -->
     <div class="skeleton-card">
       <div class="skel" style="height:12px;width:60px"></div>
       <div class="skel" style="height:22px;width:80%"></div>
@@ -539,17 +534,13 @@ body {
       <span>⚠</span><span id="modal-alert-msg">Error al crear el evento.</span>
     </div>
 
-    <!-- Tipo -->
     <div class="mfield">
       <label>Tipo de evento</label>
-      <div class="type-grid" id="type-grid">
-        <!-- populated by JS -->
-      </div>
+      <div class="type-grid" id="type-grid"></div>
     </div>
 
     <div class="modal-divider"></div>
 
-    <!-- Identidad -->
     <div class="mfield">
       <label>Nombre del evento <span style="color:var(--gold)">*</span></label>
       <input type="text" id="new-name" placeholder="Ej: Boda Nydia & Octavio">
@@ -566,7 +557,6 @@ body {
 
     <div class="modal-divider"></div>
 
-    <!-- Fechas y hora -->
     <div class="mfields-row">
       <div class="mfield">
         <label>Fecha del evento <span style="color:var(--gold)">*</span></label>
@@ -585,7 +575,6 @@ body {
 
     <div class="modal-divider"></div>
 
-    <!-- Lugar -->
     <div class="mfield">
       <label>Venue / lugar</label>
       <input type="text" id="new-venue" placeholder="Nombre del lugar">
@@ -612,12 +601,10 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── STATE ──
 let currentUser = null;
 let eventTypes = [];
 let selectedTypeId = 1;
 
-// ── AUTH GUARD ──
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.replace('login.html'); return; }
@@ -633,13 +620,11 @@ function renderUserChip(email) {
   document.getElementById('user-email').textContent = email;
 }
 
-// ── LOGOUT ──
 async function handleLogout() {
   await sb.auth.signOut();
   window.location.replace('login.html');
 }
 
-// ── LOAD EVENT TYPES ──
 async function loadEventTypes() {
   const { data, error } = await sb.from('event_types').select('*').order('id');
   if (error || !data) return;
@@ -664,7 +649,6 @@ function selectType(id) {
   document.getElementById('type-opt-' + id)?.classList.add('selected');
 }
 
-// ── LOAD EVENTS ──
 async function loadEvents() {
   const { data, error } = await sb
     .from('events')
@@ -748,12 +732,10 @@ function renderEventCard(ev) {
 }
 
 function openEvent(eventId) {
-  // Guardamos el event_id en sessionStorage para que la consola lo lea
   sessionStorage.setItem('ivent_event_id', eventId);
-  window.location.href = 'prototype/ivent-admin-proto.html';
+  window.location.href = 'app/event-designer.html';
 }
 
-// ── MODAL ──
 function openModal() {
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('new-name').focus();
@@ -781,7 +763,6 @@ function hideModalAlert() {
   document.getElementById('modal-alert').classList.remove('visible');
 }
 
-// ── CREATE EVENT ──
 async function handleCreateEvent() {
   const name = document.getElementById('new-name').value.trim();
   const startDate = document.getElementById('new-date').value;
@@ -823,12 +804,10 @@ async function handleCreateEvent() {
     return;
   }
 
-  // Evento creado — ir directo a la consola
   sessionStorage.setItem('ivent_event_id', data.id);
-  window.location.href = 'prototype/ivent-admin-proto.html';
+  window.location.href = 'app/event-designer.html';
 }
 
-// ── ESCAPE KEY ──
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
