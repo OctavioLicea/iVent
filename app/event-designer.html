@@ -367,7 +367,7 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
   <span class="topnav-event-name" id="topnav-event-name">Cargando…</span>
   <div class="topnav-spacer"></div>
   <span class="saved-msg" id="saved-msg">✓ Guardado</span>
-  <button class="btn-save" onclick="showSaved()">Guardar cambios</button>
+  <button class="btn-save" onclick="saveEvent()">Guardar cambios</button>
   <button class="btn-front-page" onclick="openFrontPage()"><span class="btn-front-page-icon">⛶</span>Ver portada</button>
   <!-- #1 — user chip -->
   <div class="user-chip" id="user-chip">
@@ -1189,25 +1189,192 @@ function renderQRPlaceholder(){
   pattern.innerHTML=cells.map(on=>`<div class="ev-qr-cell" style="background:${on?'#1a1a1a':'#f8f8f8'}"></div>`).join('');
 }
 
-// ── SAVE ──
-function showSaved(){
+// ── LOAD EVENT FROM SUPABASE ──
+let currentEventId=null;
+
+async function loadEvent(){
+  const eventId=sessionStorage.getItem('ivent_event_id');
+  if(!eventId)return;
+  currentEventId=eventId;
+
+  const{data:ev,error}=await sb.from('events').select('*').eq('id',eventId).single();
+  if(error||!ev){console.error('Error cargando evento',error);return;}
+
+  // Topnav
+  document.getElementById('topnav-event-name').textContent=ev.nombre||'Sin nombre';
+
+  // ── Identidad ──
+  document.getElementById('f-names').value=ev.titulo||ev.nombre||'';
+  document.getElementById('f-subtitle').value=ev.subtitulo||'';
+  document.getElementById('f-venue').value=ev.lugar||'';
+  document.getElementById('f-maps').value=ev.url_lugar||'';
+  if(ev.fecha_inicio)document.getElementById('f-date').value=ev.fecha_inicio;
+  if(ev.hora_inicio)document.getElementById('f-time').value=ev.hora_inicio.substring(0,5);
+  updatePreview();
+  updateMapsBtn();
+
+  const cfg=ev.config||{};
+
+  // ── Paleta — leer de config.palette primero, fallback a columnas planas ──
+  const pal=cfg.palette||{
+    primary:ev.color_primary||'#7D2935',
+    accent:ev.color_accent||'#9C6B2E',
+    surface:ev.color_surface||'#FAF7F2',
+    ink:ev.color_ink||'2A1F1A',
+  };
+  // Aplicar como paleta custom
+  document.getElementById('cp1').value=pal.primary||'#7D2935';
+  document.getElementById('cp2').value=pal.accent||'#9C6B2E';
+  document.getElementById('cp3').value=pal.surface||'#FAF7F2';
+  document.getElementById('cp4').value=pal.ink||'#2A1F1A';
+  // Detectar si coincide con una paleta predefinida
+  const matchedKey=detectPaletteKey(pal.primary);
+  if(matchedKey){
+    const btn=document.querySelector(`.palette-opt[onclick*="'${matchedKey}'"]`);
+    if(btn)setPalette(matchedKey,btn);
+  }else{
+    const btn=document.getElementById('custom-palette-btn');
+    if(btn)setPalette('custom',btn);
+    updateCustomPalette();
+  }
+
+  // ── Tipografía ──
+  if(cfg.typography){
+    Object.keys(cfg.typography).forEach(key=>{
+      if(typography[key])Object.assign(typography[key],cfg.typography[key]);
+    });
+    renderTypoTable();
+    Object.keys(typography).forEach(key=>applyTypoToPreview(key));
+  }
+
+  // ── Módulos ──
+  if(cfg.modules){
+    Object.keys(cfg.modules).forEach(id=>{
+      const m=cfg.modules[id];
+      const row=document.querySelector(`.module-row[data-module="${id}"]`);
+      const toggle=row?.querySelector('input[type="checkbox"]');
+      const input=row?.querySelector('.module-name-input');
+      if(toggle){toggle.checked=m.active!==false;toggleModule(id,m.active!==false);}
+      if(input&&m.label){input.value=m.label;updateModuleLabel(id,m.label);}
+    });
+  }
+
+  // ── Frames ──
+  if(cfg.frames){
+    const fm=cfg.frames;
+    const map={inv:'inv',nav:'nav',qr:'qr','maps_a':'maps-a','maps_b':'maps-b'};
+    Object.keys(map).forEach(dbKey=>{
+      const uiKey=map[dbKey];
+      if(fm[dbKey]){
+        frameColors[uiKey]=fm[dbKey];
+        const btn=document.getElementById('fc-'+uiKey);
+        if(btn)btn.style.background=fm[dbKey];
+      }
+    });
+    // Aplicar frames al preview
+    if(fm.inv){const w=document.getElementById('prev-inv-wrap');w.style.background=fm.inv;document.documentElement.style.setProperty('--frame-inv',fm.inv);}
+    if(fm.nav){document.querySelectorAll('.ev-nav-item').forEach(el=>el.style.background=fm.nav);document.documentElement.style.setProperty('--frame-nav',fm.nav);}
+    if(fm.qr){document.getElementById('ev-qr-block').style.background=fm.qr;document.documentElement.style.setProperty('--frame-qr',fm.qr);}
+    updateMapsGradient();
+  }
+
+  hasUnsavedChanges=false;
+}
+
+// Detecta si un color primary coincide con una paleta predefinida
+function detectPaletteKey(primary){
+  const map={
+    '#7D2935':'boda','#561820':'boda',
+    '#7B3FA0':'quince','#5B2D8E':'quince',
+    '#2A4A7F':'marino','#1B2C4E':'marino',
+    '#3D6B20':'botanico','#2D5016':'botanico',
+  };
+  return map[primary]||null;
+}
+
+// ── SAVE TO SUPABASE ──
+async function saveEvent(){
+  if(!currentEventId)return;
+  const btn=document.querySelector('.btn-save');
+  btn.textContent='Guardando…';btn.disabled=true;
+
+  // Recoger módulos
+  const modules={};
+  document.querySelectorAll('.module-row[data-module]').forEach(row=>{
+    const id=row.dataset.module;
+    const active=row.querySelector('input[type="checkbox"]')?.checked!==false;
+    const label=row.querySelector('.module-name-input')?.value||id;
+    modules[id]={active,label};
+  });
+
+  // Recoger colores actuales como palette en config
+  const palette={
+    primary:document.getElementById('cp1').value,
+    accent:document.getElementById('cp2').value,
+    surface:document.getElementById('cp3').value,
+    ink:document.getElementById('cp4').value,
+  };
+
+  // Si la paleta es predefinida, tomar colores de PALETTES
+  if(currentPaletteKey!=='custom'){
+    const p=PALETTES[currentPaletteKey];
+    palette.primary=p.primary;
+    palette.accent=p.accent;
+    palette.surface=p.surface;
+    palette.ink=p.ink;
+  }
+
+  const payload={
+    nombre:document.getElementById('f-names').value.trim()||'Sin nombre',
+    titulo:document.getElementById('f-names').value.trim()||null,
+    subtitulo:document.getElementById('f-subtitle').value.trim()||null,
+    lugar:document.getElementById('f-venue').value.trim()||null,
+    url_lugar:document.getElementById('f-maps').value.trim()||null,
+    fecha_inicio:document.getElementById('f-date').value||null,
+    hora_inicio:document.getElementById('f-time').value||null,
+    config:{
+      palette,
+      typography,
+      modules,
+      frames:{
+        inv:frameColors.inv,
+        nav:frameColors.nav,
+        qr:frameColors.qr,
+        maps_a:frameColors['maps-a'],
+        maps_b:frameColors['maps-b'],
+      },
+    },
+  };
+
+  const{error}=await sb.from('events').update(payload).eq('id',currentEventId);
+
+  btn.textContent='Guardar cambios';btn.disabled=false;
+
+  if(error){
+    console.error('Error guardando',error);
+    alert('Error al guardar: '+error.message);
+    return;
+  }
+
   hasUnsavedChanges=false;
   const msg=document.getElementById('saved-msg');
   msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2500);
 }
 
 // ── INIT ──
-updatePreview();updateMapsBtn();initTypoTable();renderQRPlaceholder();initBgPanel();
-currentPaletteColors=getPaletteColors('marino');
-applyPalette('marino');
-Object.keys(typography).forEach(key=>applyTypoToPreview(key));
-updateMapsGradient();
-document.getElementById('logo-options').style.display='';
-// Nombre del evento en topnav (desde sessionStorage si disponible)
-const storedEventId=sessionStorage.getItem('ivent_event_id');
-if(storedEventId){
-  document.getElementById('topnav-event-name').textContent='Cargando evento…';
-}
+(async()=>{
+  // Render inicial con defaults
+  initTypoTable();renderQRPlaceholder();initBgPanel();
+  currentPaletteColors=getPaletteColors('marino');
+  applyPalette('marino');
+  Object.keys(typography).forEach(key=>applyTypoToPreview(key));
+  updateMapsGradient();
+  document.getElementById('logo-options').style.display='';
+  updatePreview();updateMapsBtn();
+
+  // Auth + load evento en paralelo
+  await Promise.all([initAuth(),loadEvent()]);
+})();
 </script>
 </body>
 </html>
