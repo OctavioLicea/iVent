@@ -60,7 +60,7 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 .saved-msg.show{opacity:1;}
 
 /* ── 3-COLUMN LAYOUT ── */
-.workspace{display:grid;grid-template-columns:200px 1fr 420px;flex:1;min-height:0;overflow:hidden;}
+.workspace{display:grid;grid-template-columns:200px 1fr 1fr;flex:1;min-height:0;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{background:var(--surface-warm);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;padding:16px 0;}
@@ -318,6 +318,22 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 .ev-qr-cell{border-radius:1px;}
 .ev-qr-label{font-family:'Cormorant Garamond',serif;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ev-ink-mute);text-align:center;}
 
+/* ── BTN VER PORTADA ── */
+.btn-front-page{display:flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius);font-family:var(--font);font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);cursor:pointer;transition:all .15s;position:relative;z-index:1;}
+.btn-front-page:hover{border-color:rgba(255,255,255,0.35);color:#F0EDE8;background:rgba(255,255,255,0.06);}
+.btn-front-page-icon{font-size:13px;}
+
+/* ── FRONT PAGE MODAL ── */
+.fp-overlay{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.6);z-index:800;align-items:center;justify-content:center;padding:24px;}
+.fp-overlay.open{display:flex;}
+.fp-modal{background:#fff;border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.2);}
+.fp-modal::-webkit-scrollbar{width:4px;}
+.fp-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.fp-modal-header{display:flex;align-items:center;justify-content:space-between;width:100%;gap:16px;}
+.fp-modal-title{font-family:var(--font-serif);font-size:18px;font-weight:500;color:var(--ink);}
+.fp-modal-close{background:none;border:none;font-size:20px;color:var(--ink-mute);cursor:pointer;padding:2px 8px;border-radius:var(--radius);transition:background .15s;line-height:1;flex-shrink:0;}
+.fp-modal-close:hover{background:var(--surface-section);color:var(--ink);}
+
 /* ── CONFIRM MODAL — #2 ── */
 .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.5);z-index:700;align-items:center;justify-content:center;padding:24px;}
 .confirm-overlay.open{display:flex;}
@@ -352,6 +368,7 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
   <div class="topnav-spacer"></div>
   <span class="saved-msg" id="saved-msg">✓ Guardado</span>
   <button class="btn-save" onclick="showSaved()">Guardar cambios</button>
+  <button class="btn-front-page" onclick="openFrontPage()"><span class="btn-front-page-icon">⛶</span>Ver portada</button>
   <!-- #1 — user chip -->
   <div class="user-chip" id="user-chip">
     <div class="user-avatar" id="user-avatar">?</div>
@@ -577,7 +594,7 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 
   <!-- ── PREVIEW ── -->
   <div class="preview-area">
-    <div class="preview-label">Vista del invitado · tiempo real</div>
+    <div class="preview-label">Portada del evento · tiempo real</div>
     <div class="event-page" id="event-preview">
       <div class="ev-header" id="ev-header">
         <div class="drag-hint">⬍ Arrastra para mover</div>
@@ -637,6 +654,20 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
   </div>
 </div>
 
+<!-- FRONT PAGE MODAL -->
+<div class="fp-overlay" id="fp-overlay" onclick="closeFrontPageOutside(event)">
+  <div class="fp-modal" id="fp-modal">
+    <div class="fp-modal-header">
+      <div class="fp-modal-title">Portada del evento</div>
+      <button class="fp-modal-close" onclick="closeFrontPage()">✕</button>
+    </div>
+    <div id="fp-event-page-clone"></div>
+    <div style="font-size:11px;color:var(--ink-mute);text-align:center;line-height:1.6;">
+      Así verán la portada tus invitados.
+    </div>
+  </div>
+</div>
+
 <!-- #2 — CONFIRM MODAL -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
@@ -666,6 +697,33 @@ async function initAuth(){
   document.getElementById('user-email').textContent=email;
 }
 initAuth();
+
+// ── FRONT PAGE MODAL ──
+function openFrontPage(){
+  const original=document.getElementById('event-preview');
+  const clone=original.cloneNode(true);
+  clone.id='fp-preview-clone';
+  // Heredar estilos inline del original (background, etc.)
+  clone.style.cssText=original.style.cssText;
+  clone.style.maxWidth='380px';
+  clone.style.width='100%';
+  clone.style.boxShadow='none';
+  clone.style.borderRadius='16px';
+  // Quitar interactividad del clone
+  clone.querySelectorAll('input,button,label').forEach(el=>el.setAttribute('tabindex','-1'));
+  const container=document.getElementById('fp-event-page-clone');
+  container.innerHTML='';
+  container.appendChild(clone);
+  document.getElementById('fp-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeFrontPage(){
+  document.getElementById('fp-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function closeFrontPageOutside(e){
+  if(e.target===document.getElementById('fp-overlay'))closeFrontPage();
+}
 
 // ── BACK WITH CONFIRM — #2 ──
 let hasUnsavedChanges=false;
