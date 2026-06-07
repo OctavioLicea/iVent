@@ -520,7 +520,7 @@ body {
 </div>
 
 <!-- ── MODAL: NUEVO EVENTO ── -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
       <div>
@@ -745,10 +745,6 @@ function openModal() {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   clearModalForm();
-}
-
-function closeModalOutside(e) {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
 }
 
 function clearModalForm() {
