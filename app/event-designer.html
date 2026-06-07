@@ -272,6 +272,9 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 /* ── EVENT PAGE ── */
 .event-page{width:100%;max-width:380px;background:var(--ev-surface);border-radius:20px;overflow:visible;box-shadow:0 8px 40px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.06);padding:18px 12px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'DM Sans',sans-serif;position:relative;}
 .ev-header{text-align:center;width:100%;position:relative;padding:4px 6px;border-radius:8px;z-index:20;}
+.ev-header.draggable{cursor:grab;user-select:none;}
+.ev-header.draggable:hover{outline:1.5px dashed rgba(196,151,58,0.4);}
+.ev-header.draggable.dragging{cursor:grabbing;outline:1.5px dashed var(--gold);}
 .ev-maps-bar-label{font-size:14px;font-weight:600;letter-spacing:.04em;color:#fff;text-align:center;font-family:var(--maps-bar-font,'Cormorant Garamond'),serif;}
 .drag-indicator{font-size:9px;color:var(--border-strong);text-align:center;letter-spacing:.03em;}
 .ev-header-row{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;}
@@ -365,6 +368,8 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
   <span class="saved-msg" id="saved-msg">✓ Guardado</span>
   <button class="btn-save" onclick="saveEvent()">Guardar cambios</button>
   <button class="btn-front-page" onclick="openFrontPage()"><span class="btn-front-page-icon">⛶</span>Ver portada</button>
+  <!-- timestamp de versión -->
+  <span id="version-stamp" style="font-size:10px;color:rgba(255,255,255,0.25);position:relative;z-index:1;white-space:nowrap;"></span>
   <!-- #1 — user chip -->
   <div class="user-chip" id="user-chip">
     <div class="user-avatar" id="user-avatar">?</div>
@@ -815,6 +820,30 @@ function updateMapsBtn(){
 
 // ── LOGO TOGGLE ──
 function toggleLogo(show){const el=document.getElementById('prev-logo');if(el)el.style.display=show&&el.src?'block':'none';}
+
+// ── DRAG HEADER (solo en preview del designer) ──
+function initDragHeader(header,container){
+  if(!header||!container)return;
+  header.classList.add('draggable');
+  let isDragging=false,startX=0,startY=0,curX=0,curY=0;
+  header.style.transform='translate(0,0)';
+  function onDown(cx,cy){isDragging=true;header.classList.add('dragging');startX=cx-curX;startY=cy-curY;}
+  function onMove(cx,cy){
+    if(!isDragging)return;
+    curX=cx-startX;curY=cy-startY;
+    const maxY=container.offsetHeight-header.offsetHeight;
+    curY=Math.max(-header.offsetTop,Math.min(curY,maxY-header.offsetTop));
+    curX=Math.max(-40,Math.min(curX,40));
+    header.style.transform=`translate(${curX}px,${curY}px)`;
+  }
+  function onUp(){isDragging=false;header.classList.remove('dragging');}
+  header.addEventListener('mousedown',e=>{if(e.target.tagName==='A')return;onDown(e.clientX,e.clientY);e.preventDefault();});
+  document.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+  document.addEventListener('mouseup',onUp);
+  header.addEventListener('touchstart',e=>{const t=e.touches[0];onDown(t.clientX,t.clientY);},{passive:true});
+  document.addEventListener('touchmove',e=>{const t=e.touches[0];onMove(t.clientX,t.clientY);},{passive:true});
+  document.addEventListener('touchend',onUp);
+}
 
 // ── INV FIT ──
 let currentInvFit='contain';
@@ -1298,20 +1327,53 @@ async function loadEvent(){
     selectedBg='custom';
   }
 
-  // ── Frames — mapeo db keys (maps_a/maps_b) → ui keys (maps-a/maps-b) ──
+  // ── Frames — soporta formato nuevo {color,on} y viejo string ──
   if(cfg.frames){
     const fm=cfg.frames;
-    const dbToUi={inv:'inv',nav:'nav',qr:'qr',maps_a:'maps-a',maps_b:'maps-b'};
-    Object.entries(dbToUi).forEach(([dbKey,uiKey])=>{
-      if(!fm[dbKey])return;
-      frameColors[uiKey]=fm[dbKey];
+    // Helper: extrae color de formato nuevo o viejo
+    const getColor=v=>typeof v==='object'?v.color:v;
+    const getOn=v=>typeof v==='object'?(v.on!==false):true;
+
+    const frameMap={inv:'inv',nav:'nav',qr:'qr'};
+    Object.entries(frameMap).forEach(([key,uiKey])=>{
+      if(!fm[key])return;
+      const color=getColor(fm[key]);
+      const on=getOn(fm[key]);
+      frameColors[uiKey]=color;
+      frameOn[uiKey]=on;
       const btn=document.getElementById('fc-'+uiKey);
-      if(btn)btn.style.background=fm[dbKey];
+      if(btn)btn.style.background=color;
+      const toggle=document.getElementById('frame-toggle-'+uiKey);
+      if(toggle)toggle.checked=on;
     });
+    // maps colors
+    if(fm.maps_a){frameColors['maps-a']=getColor(fm.maps_a);const b=document.getElementById('fc-maps-a');if(b)b.style.background=frameColors['maps-a'];}
+    if(fm.maps_b){frameColors['maps-b']=getColor(fm.maps_b);const b=document.getElementById('fc-maps-b');if(b)b.style.background=frameColors['maps-b'];}
+    // maps toggle
+    const mapsOn=fm.maps_on!==false;
+    frameOn.maps=mapsOn;
+    const mapsToggle=document.getElementById('frame-toggle-maps');
+    if(mapsToggle)mapsToggle.checked=mapsOn;
+
     // Aplicar al preview
-    if(fm.inv){document.getElementById('prev-inv-wrap').style.background=fm.inv;document.documentElement.style.setProperty('--frame-inv',fm.inv);}
-    if(fm.nav){document.querySelectorAll('.ev-nav-item').forEach(el=>el.style.background=fm.nav);document.documentElement.style.setProperty('--frame-nav',fm.nav);}
-    if(fm.qr){document.getElementById('ev-qr-block').style.background=fm.qr;document.documentElement.style.setProperty('--frame-qr',fm.qr);}
+    const invWrap=document.getElementById('prev-inv-wrap');
+    invWrap.classList.toggle('frame-on',frameOn.inv);
+    invWrap.style.background=frameOn.inv?frameColors.inv:'transparent';
+    document.documentElement.style.setProperty('--frame-inv',frameColors.inv);
+
+    document.querySelectorAll('.ev-nav-item').forEach(el=>{
+      el.classList.toggle('frame-on',frameOn.nav);
+      el.style.background=frameOn.nav?frameColors.nav:'transparent';
+    });
+    document.documentElement.style.setProperty('--frame-nav',frameColors.nav);
+
+    const qrBlock=document.getElementById('ev-qr-block');
+    qrBlock.classList.toggle('frame-on',frameOn.qr);
+    qrBlock.style.background=frameOn.qr?frameColors.qr:'transparent';
+    document.documentElement.style.setProperty('--frame-qr',frameColors.qr);
+
+    const bar=document.getElementById('prev-maps-bar');
+    if(bar){bar.style.opacity=mapsOn?'1':'0';bar.style.pointerEvents=mapsOn?'':'none';}
     updateMapsGradient();
   }
 
@@ -1374,11 +1436,12 @@ async function saveEvent(){
       typography,
       modules,
       frames:{
-        inv:frameColors.inv,
-        nav:frameColors.nav,
-        qr:frameColors.qr,
-        maps_a:frameColors['maps-a'],
-        maps_b:frameColors['maps-b'],
+        inv:{color:frameColors.inv,on:frameOn.inv},
+        nav:{color:frameColors.nav,on:frameOn.nav},
+        qr:{color:frameColors.qr,on:frameOn.qr},
+        maps_a:{color:frameColors['maps-a']},
+        maps_b:{color:frameColors['maps-b']},
+        maps_on:frameOn.maps,
       },
     },
   };
@@ -1400,6 +1463,13 @@ async function saveEvent(){
 
 // ── INIT ──
 (async()=>{
+  // Timestamp de versión
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const ts=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const stamp=document.getElementById('version-stamp');
+  if(stamp)stamp.textContent=ts;
+
   // Render inicial con defaults
   initTypoTable();renderQRPlaceholder();initBgPanel();
   currentPaletteColors=getPaletteColors('marino');
@@ -1408,6 +1478,9 @@ async function saveEvent(){
   updateMapsGradient();
   document.getElementById('logo-options').style.display='';
   updatePreview();updateMapsBtn();
+
+  // Drag solo en preview del designer
+  initDragHeader(document.getElementById('ev-header'),document.getElementById('event-preview'));
 
   // Auth + load evento en paralelo
   await Promise.all([initAuth(),loadEvent()]);
