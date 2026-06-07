@@ -271,11 +271,8 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 
 /* ── EVENT PAGE ── */
 .event-page{width:100%;max-width:380px;background:var(--ev-surface);border-radius:20px;overflow:visible;box-shadow:0 8px 40px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.06);padding:18px 12px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'DM Sans',sans-serif;position:relative;}
-.ev-header{text-align:center;width:100%;position:relative;cursor:grab;user-select:none;padding:4px 6px;border-radius:8px;transition:outline .1s;z-index:20;}
-.ev-header:hover{outline:1.5px dashed rgba(196,151,58,0.5);}
-.ev-header.dragging{cursor:grabbing;outline:1.5px dashed var(--gold);}
-.drag-hint{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--gold-dark);white-space:nowrap;background:rgba(255,255,255,0.95);padding:2px 8px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .2s;border:1px solid var(--border);}
-.ev-header:hover .drag-hint{opacity:1;}
+.ev-header{text-align:center;width:100%;position:relative;padding:4px 6px;border-radius:8px;z-index:20;}
+.ev-maps-bar-label{font-size:14px;font-weight:600;letter-spacing:.04em;color:#fff;text-align:center;font-family:var(--maps-bar-font,'Cormorant Garamond'),serif;}
 .drag-indicator{font-size:9px;color:var(--border-strong);text-align:center;letter-spacing:.03em;}
 .ev-header-row{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;}
 .ev-logo-img{width:44px;height:44px;object-fit:contain;border-radius:8px;display:none;flex-shrink:0;}
@@ -286,7 +283,6 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
 .ev-maps-bar{width:100%;border-radius:10px;background:linear-gradient(90deg,var(--frame-maps-a) 0%,var(--frame-maps-b) 100%);box-shadow:0 4px 16px rgba(27,44,78,0.25);display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;cursor:pointer;text-decoration:none;transition:opacity .15s;}
 .ev-maps-bar:hover{opacity:.88;}
 .ev-maps-bar-pin{font-size:14px;flex-shrink:0;}
-.ev-maps-bar-label{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;letter-spacing:.04em;color:#fff;text-align:center;}
 .ev-central{display:flex;gap:8px;width:100%;align-items:stretch;}
 .ev-inv-wrap{border-radius:10px;overflow:hidden;background:var(--frame-inv);min-height:260px;align-self:stretch;display:flex;align-items:center;justify-content:center;position:relative;flex:1.4;transition:flex .2s,background .2s,box-shadow .2s;}
 .ev-inv-wrap.frame-on{box-shadow:0 6px 24px rgba(42,31,26,0.14);}
@@ -441,7 +437,7 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
         <input type="text" id="f-subtitle" value="Ceremonia de Titulación 2026" oninput="updatePreview()">
       </div>
       <div class="field">
-        <label>URL Google Maps</label>
+        <label>URL ubicación</label>
         <input type="url" id="f-maps" placeholder="https://maps.google.com/..." oninput="updateMapsBtn()">
       </div>
     </div>
@@ -597,7 +593,6 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
     <div class="preview-label">Portada del evento · tiempo real</div>
     <div class="event-page" id="event-preview">
       <div class="ev-header" id="ev-header">
-        <div class="drag-hint">⬍ Arrastra para mover</div>
         <div class="ev-header-row">
           <img class="ev-logo-img" id="prev-logo" src="" alt="">
           <div class="ev-header-text">
@@ -607,7 +602,6 @@ body{font-family:'DM Sans',sans-serif;background:#fff;color:#1A1714;display:flex
         </div>
         <div class="ev-date-row"><span class="ev-date-text" id="prev-date">Mié 1 · Julio · 2026 · 7:00 PM · Gimnasio UAC</span></div>
       </div>
-      <div class="drag-indicator" style="font-size:9px;color:var(--border-strong);text-align:center;">✦ Arrastra el encabezado para reposicionarlo</div>
       <a class="ev-maps-bar" id="prev-maps-bar" href="#" target="_blank">
         <span class="ev-maps-bar-pin">📍</span>
         <span class="ev-maps-bar-label">¿Cómo llegar?</span>
@@ -819,30 +813,6 @@ function updateMapsBtn(){
   markDirty();
 }
 
-// ── DRAG HEADER ──
-(function initDragHeader(){
-  const header=document.getElementById('ev-header');
-  let isDragging=false,startX=0,startY=0,curX=0,curY=0;
-  header.style.transform='translate(0,0)';
-  function onDown(cx,cy){isDragging=true;header.classList.add('dragging');startX=cx-curX;startY=cy-curY;}
-  function onMove(cx,cy){
-    if(!isDragging)return;
-    curX=cx-startX;curY=cy-startY;
-    const preview=document.getElementById('event-preview');
-    const maxY=preview.offsetHeight-header.offsetHeight;
-    curY=Math.max(-header.offsetTop,Math.min(curY,maxY-header.offsetTop));
-    curX=Math.max(-30,Math.min(curX,30));
-    header.style.transform=`translate(${curX}px,${curY}px)`;
-  }
-  function onUp(){isDragging=false;header.classList.remove('dragging');}
-  header.addEventListener('mousedown',e=>{if(e.target.tagName==='A')return;onDown(e.clientX,e.clientY);e.preventDefault();});
-  document.addEventListener('mousemove',e=>{onMove(e.clientX,e.clientY);});
-  document.addEventListener('mouseup',onUp);
-  header.addEventListener('touchstart',e=>{const t=e.touches[0];onDown(t.clientX,t.clientY);},{passive:true});
-  document.addEventListener('touchmove',e=>{const t=e.touches[0];onMove(t.clientX,t.clientY);},{passive:true});
-  document.addEventListener('touchend',onUp);
-})();
-
 // ── LOGO TOGGLE ──
 function toggleLogo(show){const el=document.getElementById('prev-logo');if(el)el.style.display=show&&el.src?'block':'none';}
 
@@ -893,25 +863,87 @@ function switchImgTab(type){
   document.getElementById('inv-fit-controls').classList.toggle('visible',type==='invitacion'&&!!imgStore['invitacion']);
 }
 
-function handleImgUpload(e){
+// ── IMAGE UPLOAD → SUPABASE STORAGE ──
+const STORAGE_BUCKET='event-assets';
+const IMG_FIELD_MAP={logo:'logo_url',invitacion:'flyer_url',qr:'qr_url'};
+
+async function handleImgUpload(e){
   const file=e.target.files[0];if(!file)return;
-  const url=URL.createObjectURL(file);const type=currentImgTab;imgStore[type]=url;
-  const thumb=document.getElementById('thumb-'+type);const wrap=document.getElementById('thumb-wrap-'+type);
-  if(thumb){thumb.src=url;thumb.classList.add('loaded');}if(wrap)wrap.classList.add('loaded');
-  document.getElementById('img-tab-'+type)?.classList.add('has-image');
+  const type=currentImgTab;
+
+  // Preview local inmediato
+  const localUrl=URL.createObjectURL(file);
+  applyImageToPreview(type,localUrl);
   document.getElementById('img-upload-zone').classList.add('has-image');
-  if(type==='logo'){const el=document.getElementById('prev-logo');el.src=url;el.style.display=document.getElementById('logo-toggle')?.checked?'block':'none';}
-  else if(type==='invitacion'){
-    const img=document.getElementById('prev-inv-img');const ph=document.getElementById('prev-inv-placeholder');
-    img.src=url;img.style.display='block';ph.style.display='none';
-    document.getElementById('inv-fit-controls').classList.add('visible');
-    const reader=new FileReader();reader.onload=ev=>{currentPhotoBase64=ev.target.result.split(',')[1];};reader.readAsDataURL(file);
+  document.getElementById('img-tab-'+type)?.classList.add('has-image');
+  imgStore[type]=localUrl;
+
+  if(type==='invitacion'){
+    const reader=new FileReader();
+    reader.onload=ev=>{currentPhotoBase64=ev.target.result.split(',')[1];};
+    reader.readAsDataURL(file);
     document.getElementById('btn-ai-font').style.display='flex';
-  }else if(type==='qr'){
-    document.getElementById('qr-pattern').style.display='none';
-    const qrImg=document.getElementById('prev-qr-img');qrImg.src=url;qrImg.style.display='block';
+    document.getElementById('inv-fit-controls').classList.add('visible');
+  }
+
+  // Upload a Supabase Storage si hay eventId
+  if(!currentEventId)return;
+  const ext=file.name.split('.').pop();
+  const path=`${currentEventId}/${type}.${ext}`;
+  const{error:upErr}=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{upsert:true});
+  if(upErr){console.error('Storage upload error',upErr);return;}
+
+  const{data}=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  const publicUrl=data.publicUrl;
+  imgStore[type]=publicUrl;
+
+  // Guardar URL en columna de DB
+  const col=IMG_FIELD_MAP[type];
+  if(col){
+    await sb.from('events').update({[col]:publicUrl}).eq('id',currentEventId);
   }
   markDirty();
+}
+
+// Upload fondo a Storage
+async function handleBgUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  const localUrl=URL.createObjectURL(file);
+  const page=document.getElementById('event-preview');
+  page.style.backgroundImage=`url('${localUrl}')`;
+  page.style.backgroundSize='cover';
+  page.style.backgroundPosition='center';
+  selectedBg='custom';
+  document.querySelectorAll('.bg-opt').forEach(o=>o.classList.remove('selected'));
+
+  if(!currentEventId){markDirty();return;}
+  const ext=file.name.split('.').pop();
+  const path=`${currentEventId}/bg.${ext}`;
+  const{error}=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{upsert:true});
+  if(error){console.error('BG upload error',error);return;}
+  const{data}=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  await sb.from('events').update({bg_url:data.publicUrl}).eq('id',currentEventId);
+  markDirty();
+}
+
+function applyImageToPreview(type,url){
+  const thumb=document.getElementById('thumb-'+type);
+  const wrap=document.getElementById('thumb-wrap-'+type);
+  if(thumb){thumb.src=url;thumb.classList.add('loaded');}
+  if(wrap)wrap.classList.add('loaded');
+
+  if(type==='logo'){
+    const el=document.getElementById('prev-logo');
+    el.src=url;el.style.display=document.getElementById('logo-toggle')?.checked?'block':'none';
+  }else if(type==='invitacion'){
+    const img=document.getElementById('prev-inv-img');
+    const ph=document.getElementById('prev-inv-placeholder');
+    img.src=url;img.style.display='block';ph.style.display='none';
+  }else if(type==='qr'){
+    document.getElementById('qr-pattern').style.display='none';
+    const qrImg=document.getElementById('prev-qr-img');
+    qrImg.src=url;qrImg.style.display='block';
+  }
 }
 
 // ── FRAME CONTROLS ──
@@ -988,15 +1020,6 @@ function selectBg(id){
   ['background','backgroundColor','backgroundImage','backgroundSize','backgroundPosition'].forEach(pr=>{if(tmp.style[pr])page.style[pr]=tmp.style[pr];});
   markDirty();
 }
-function handleBgUpload(e){
-  const file=e.target.files[0];if(!file)return;
-  const url=URL.createObjectURL(file);
-  const page=document.getElementById('event-preview');
-  page.style.backgroundImage=`url('${url}')`;page.style.backgroundSize='cover';page.style.backgroundPosition='center';
-  selectedBg='custom';document.querySelectorAll('.bg-opt').forEach(o=>o.classList.remove('selected'));
-  markDirty();
-}
-
 // ── TYPOGRAPHY ──
 const FONT_OPTIONS=['Great Vibes','Cormorant Garamond','Playfair Display','Dancing Script','Cinzel','Josefin Sans','Lora','Satisfy','Italiana','EB Garamond','Raleway','Montserrat','Spectral','Philosopher','Pinyon Script'];
 let typography={
@@ -1066,7 +1089,12 @@ function applyTypoToPreview(key){
   const t=typography[key];const c=t.color||getDefaultColor(key);
   const apply=el=>{if(!el)return;el.style.fontFamily=`'${t.font}',serif`;el.style.fontSize=t.size+'px';el.style.fontWeight=t.bold?700:400;el.style.textTransform=t.caps?'uppercase':'none';el.style.color=c;};
   if(key==='title'){apply(document.getElementById('prev-names'));apply(document.getElementById('prev-ph-names'));}
-  if(key==='display')apply(document.getElementById('prev-display'));
+  if(key==='display'){
+    apply(document.getElementById('prev-display'));
+    // Barra maps hereda font del rol display
+    document.documentElement.style.setProperty('--maps-bar-font',`'${t.font}'`);
+    document.querySelectorAll('.ev-maps-bar-label').forEach(el=>el.style.fontFamily=`'${t.font}',serif`);
+  }
   if(key==='caption')apply(document.getElementById('prev-date'));
   if(key==='label')document.querySelectorAll('.ev-nav-title').forEach(apply);
 }
@@ -1259,20 +1287,29 @@ async function loadEvent(){
     });
   }
 
-  // ── Frames ──
+  // ── Imágenes desde DB ──
+  if(ev.logo_url){applyImageToPreview('logo',ev.logo_url);imgStore.logo=ev.logo_url;document.getElementById('img-tab-logo')?.classList.add('has-image');}
+  if(ev.flyer_url){applyImageToPreview('invitacion',ev.flyer_url);imgStore.invitacion=ev.flyer_url;document.getElementById('img-tab-invitacion')?.classList.add('has-image');document.getElementById('inv-fit-controls').classList.add('visible');document.getElementById('btn-ai-font').style.display='flex';}
+  if(ev.qr_url){applyImageToPreview('qr',ev.qr_url);imgStore.qr=ev.qr_url;document.getElementById('img-tab-qr')?.classList.add('has-image');}
+  if(ev.bg_url){
+    const page=document.getElementById('event-preview');
+    page.style.backgroundImage=`url('${ev.bg_url}')`;
+    page.style.backgroundSize='cover';page.style.backgroundPosition='center';
+    selectedBg='custom';
+  }
+
+  // ── Frames — mapeo db keys (maps_a/maps_b) → ui keys (maps-a/maps-b) ──
   if(cfg.frames){
     const fm=cfg.frames;
-    const map={inv:'inv',nav:'nav',qr:'qr','maps_a':'maps-a','maps_b':'maps-b'};
-    Object.keys(map).forEach(dbKey=>{
-      const uiKey=map[dbKey];
-      if(fm[dbKey]){
-        frameColors[uiKey]=fm[dbKey];
-        const btn=document.getElementById('fc-'+uiKey);
-        if(btn)btn.style.background=fm[dbKey];
-      }
+    const dbToUi={inv:'inv',nav:'nav',qr:'qr',maps_a:'maps-a',maps_b:'maps-b'};
+    Object.entries(dbToUi).forEach(([dbKey,uiKey])=>{
+      if(!fm[dbKey])return;
+      frameColors[uiKey]=fm[dbKey];
+      const btn=document.getElementById('fc-'+uiKey);
+      if(btn)btn.style.background=fm[dbKey];
     });
-    // Aplicar frames al preview
-    if(fm.inv){const w=document.getElementById('prev-inv-wrap');w.style.background=fm.inv;document.documentElement.style.setProperty('--frame-inv',fm.inv);}
+    // Aplicar al preview
+    if(fm.inv){document.getElementById('prev-inv-wrap').style.background=fm.inv;document.documentElement.style.setProperty('--frame-inv',fm.inv);}
     if(fm.nav){document.querySelectorAll('.ev-nav-item').forEach(el=>el.style.background=fm.nav);document.documentElement.style.setProperty('--frame-nav',fm.nav);}
     if(fm.qr){document.getElementById('ev-qr-block').style.background=fm.qr;document.documentElement.style.setProperty('--frame-qr',fm.qr);}
     updateMapsGradient();
