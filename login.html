@@ -732,7 +732,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     // Already logged in — redirect to admin panel
-    window.location.href = 'ivent-admin-proto.html';
+    window.location.href = 'prototype/ivent-admin-proto.html';
   }
 })();
 
@@ -765,7 +765,7 @@ async function handleLogin() {
       error.message.includes('Invalid') ? 'Correo o NIP incorrectos. Intenta de nuevo.' : error.message;
     showAlert('login-alert', true);
   } else {
-    window.location.href = 'ivent-admin-proto.html';
+    window.location.href = 'prototype/ivent-admin-proto.html';
   }
 }
 
@@ -817,7 +817,7 @@ async function handleReset() {
 
   setLoading('btn-reset', true);
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/ivent-login.html'
+    redirectTo: 'https://octaviolicea.github.io/iVent/login.html'
   });
   setLoading('btn-reset', false);
 
