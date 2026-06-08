@@ -66,8 +66,11 @@ body{
 /* ── TÍTULO del evento ── */
 .event-title{
   text-align:center;padding:28px 20px 4px;
-  font-family:var(--font-display);font-size:44px;
-  color:var(--color-primary);line-height:1.1;
+  font-family:var(--font-display);
+  font-size:var(--title-size, 44px);
+  font-weight:var(--title-weight, 400);
+  color:var(--title-color, var(--color-primary));
+  line-height:1.1;
 }
 .event-subtitle{
   text-align:center;font-family:var(--font-heading);font-size:11px;
@@ -249,6 +252,10 @@ function applyConfig(config) {
     if (t.title?.font)   r.setProperty('--font-display', `"${t.title.font}", cursive`);
     if (t.display?.font) r.setProperty('--font-heading', `"${t.display.font}", serif`);
     if (t.caption?.font) r.setProperty('--font-body',    `"${t.caption.font}", sans-serif`);
+    // Título: tamaño, bold y color desde config
+    if (t.title?.size)  r.setProperty('--title-size',   t.title.size + 'px');
+    if (t.title?.bold !== undefined) r.setProperty('--title-weight', t.title.bold ? '700' : '400');
+    if (t.title?.color) r.setProperty('--title-color',  t.title.color);
   }
 }
 
