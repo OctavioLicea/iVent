@@ -38,29 +38,28 @@ body{
   min-height:100vh;
 }
 
-/* ── TOP BAR oscura ── */
+/* ── TOP BAR — igual que event-designer ── */
 .top-bar{
-  width:100%;display:flex;align-items:center;padding:14px 18px;
-  background:var(--topnav);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  position:sticky;top:0;z-index:20;gap:12px;
+  height:56px;background:var(--topnav);
+  border-bottom:1px solid rgba(196,151,58,0.15);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  position:sticky;top:0;z-index:20;
 }
 .home-btn{
-  display:flex;align-items:center;gap:7px;
-  background:rgba(255,255,255,0.08);
-  border:0.5px solid rgba(255,255,255,0.15);
-  border-radius:30px;padding:7px 14px;
-  font-family:var(--font-heading);font-size:15px;
-  color:rgba(255,255,255,0.7);text-decoration:none;
-  transition:background .15s,color .15s;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:rgba(255,255,255,0.4);
+  background:none;border:none;cursor:pointer;
+  font-family:var(--font-body);padding:6px 10px;
+  border-radius:8px;transition:color .15s,background .15s;
+  text-decoration:none;flex-shrink:0;
 }
-.home-btn:hover{background:rgba(255,255,255,0.14);color:#fff}
+.home-btn:hover{color:#F0EDE8;background:rgba(255,255,255,0.06)}
 .home-btn svg{width:14px;height:14px;fill:currentColor}
 .top-bar-title{
-  flex:1;font-family:var(--font-heading);font-size:17px;
-  color:rgba(255,255,255,0.5);text-align:center;
+  flex:1;font-size:13px;
+  color:rgba(255,255,255,0.45);text-align:center;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--font-body);
 }
 .top-bar-space{width:80px;flex-shrink:0}
 
@@ -163,10 +162,7 @@ body{
 </div>
 
 <div class="top-bar">
-  <a class="home-btn" href="index.html" id="home-btn">
-    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    Inicio
-  </a>
+  <a class="home-btn" href="index.html" id="home-btn">← Inicio</a>
   <div class="top-bar-title" id="top-bar-title">Fotos</div>
   <div class="top-bar-space"></div>
 </div>
