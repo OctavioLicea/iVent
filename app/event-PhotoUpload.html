@@ -8,100 +8,149 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --color-primary:#7D2935;
-  --color-accent:#9C6B2E;
-  --color-surface:#FAF7F2;
-  --color-ink:#2A1F1A;
-  --color-ink-soft:#5C4A3A;
-  --color-ink-mute:#9C8878;
-  --color-surface2:#F2EBE0;
-  --color-border:rgba(90,50,30,0.10);
-  --color-border-strong:rgba(90,50,30,0.20);
-  --color-primary-light: color-mix(in srgb, var(--color-primary) 12%, white);
+  --color-primary:#3D6B20;
+  --color-accent:#7A9E52;
+  --color-surface:#F8FCF5;
+  --color-ink:#1A2010;
+  --color-ink-soft:#3D5016;
+  --color-ink-mute:#6A8050;
+  --color-surface2:#EEF4E8;
+  --color-border:rgba(30,60,10,0.12);
+  --color-border-strong:rgba(30,60,10,0.22);
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 10%, white);
   --font-display:"Great Vibes",cursive;
   --font-heading:"Cormorant Garamond",serif;
   --font-body:"DM Sans",sans-serif;
   --maps-a:#1B2C4E;
-  --maps-b:#2A3A20;
+  --maps-b:#1A2010;
+  --topnav:#1A1714;
   --radius:10px;--radius-lg:16px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:15px}
-body{font-family:var(--font-body);background:var(--color-surface);background-size:cover;background-position:center;background-attachment:fixed;color:var(--color-ink);min-height:100vh}
+body{
+  font-family:var(--font-body);
+  background-color:var(--color-surface);
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+  color:var(--color-ink);
+  min-height:100vh;
+}
 
-/* Top bar */
-.top-bar{width:100%;display:flex;align-items:center;padding:14px 18px;border-bottom:0.5px solid var(--color-border);background:var(--color-surface);position:sticky;top:0;z-index:20;gap:12px}
-.home-btn{display:flex;align-items:center;gap:7px;background:var(--color-surface2);border:0.5px solid var(--color-border-strong);border-radius:30px;padding:7px 14px;font-family:var(--font-heading);font-size:15px;color:var(--color-ink-soft);text-decoration:none;transition:background .15s,color .15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.home-btn:hover{background:var(--color-primary-light);color:var(--color-primary)}
+/* ── TOP BAR oscura ── */
+.top-bar{
+  width:100%;display:flex;align-items:center;padding:14px 18px;
+  background:var(--topnav);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  position:sticky;top:0;z-index:20;gap:12px;
+}
+.home-btn{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.08);
+  border:0.5px solid rgba(255,255,255,0.15);
+  border-radius:30px;padding:7px 14px;
+  font-family:var(--font-heading);font-size:15px;
+  color:rgba(255,255,255,0.7);text-decoration:none;
+  transition:background .15s,color .15s;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.home-btn:hover{background:rgba(255,255,255,0.14);color:#fff}
 .home-btn svg{width:14px;height:14px;fill:currentColor}
-.top-bar-title{flex:1;font-family:var(--font-heading);font-size:17px;color:var(--color-ink-mute);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-bar-title{
+  flex:1;font-family:var(--font-heading);font-size:17px;
+  color:rgba(255,255,255,0.5);text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .top-bar-space{width:80px;flex-shrink:0}
 
-/* Título del evento */
-.event-title{text-align:center;padding:24px 20px 4px;font-family:var(--font-display);font-size:42px;color:var(--color-primary);line-height:1.1}
-.event-subtitle{text-align:center;font-family:var(--font-heading);font-size:12px;color:var(--color-ink-mute);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+/* ── TÍTULO del evento ── */
+.event-title{
+  text-align:center;padding:28px 20px 4px;
+  font-family:var(--font-display);font-size:44px;
+  color:var(--color-primary);line-height:1.1;
+}
+.event-subtitle{
+  text-align:center;font-family:var(--font-heading);font-size:11px;
+  color:var(--color-ink-mute);letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:4px;
+}
 
-/* Barra "Tomar foto" estilo maps */
-.btn-camara{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:480px;color:#fff;font-family:var(--font-heading);font-size:18px;font-weight:600;letter-spacing:.03em;padding:14px 24px;border-radius:var(--radius-lg);border:none;cursor:pointer;margin:0 auto;box-shadow:0 3px 16px rgba(0,0,0,.18);transition:opacity .15s,transform .12s;background:linear-gradient(90deg, var(--maps-a), var(--maps-b))}
-.btn-camara:hover{opacity:.9;transform:translateY(-1px)}
-.btn-camara:active{transform:scale(.98)}
+/* ── PAGE ── */
+.page-wrap{display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 56px);padding:0 0 60px}
+.inv-body{width:100%;max-width:480px;padding:20px 20px 0;display:flex;flex-direction:column;gap:18px}
 
-/* Page */
-.page-wrap{display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 56px);padding:0 0 80px}
-.inv-body{width:100%;max-width:480px;padding:20px 20px 0;display:flex;flex-direction:column;gap:20px}
-
-/* Counter */
-.inv-counter{text-align:center;padding:12px;background:color-mix(in srgb, var(--color-accent) 12%, white);border-radius:var(--radius);border:0.5px solid var(--color-border)}
-.inv-counter span{font-family:var(--font-heading);font-size:20px;color:var(--color-accent)}
+/* ── COUNTER ── */
+.inv-counter{
+  text-align:center;padding:12px;
+  background:#fff;
+  border-radius:var(--radius);border:0.5px solid var(--color-border);
+}
+.inv-counter span{font-family:var(--font-heading);font-size:20px;color:var(--color-primary)}
 .inv-counter small{font-size:12px;color:var(--color-ink-mute);display:block;margin-top:2px}
 
-/* Drop zone */
-.drop-zone{border:1.5px dashed var(--color-border);border-radius:var(--radius-lg);background:color-mix(in srgb, var(--color-surface) 85%, white);padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative}
+/* ── DROP ZONE ── */
+.drop-zone{
+  border:1.5px dashed var(--color-border);
+  border-radius:var(--radius-lg);
+  background:#fff;
+  padding:40px 24px;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;position:relative;
+}
 .drop-zone:hover,.drop-zone.drag-over{border-color:var(--color-primary);background:var(--color-primary-light)}
 .drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .drop-icon{font-size:36px;margin-bottom:12px}
 .drop-label{font-family:var(--font-heading);font-size:20px;color:var(--color-primary);margin-bottom:6px}
 .drop-sub{font-size:12px;color:var(--color-ink-mute)}
 
-/* Preview */
+/* ── PREVIEW ── */
 .preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.preview-item{position:relative;aspect-ratio:1;border-radius:var(--radius);overflow:hidden;background:var(--color-surface2);border:0.5px solid var(--color-border)}
+.preview-item{position:relative;aspect-ratio:1;border-radius:var(--radius);overflow:hidden;background:#fff;border:0.5px solid var(--color-border)}
 .preview-item img,.preview-item video{width:100%;height:100%;object-fit:cover}
-.preview-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(42,31,26,.6);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
-.preview-badge{position:absolute;bottom:4px;left:4px;font-size:10px;background:rgba(42,31,26,.55);color:#fff;padding:2px 6px;border-radius:20px}
+.preview-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.preview-badge{position:absolute;bottom:4px;left:4px;font-size:10px;background:rgba(0,0,0,.45);color:#fff;padding:2px 6px;border-radius:20px}
 
-/* Nombre */
+/* ── NOMBRE ── */
 .nombre-wrap{display:flex;flex-direction:column;gap:6px}
 .nombre-label{font-size:12px;color:var(--color-ink-mute);letter-spacing:.04em;text-transform:uppercase}
-.nombre-input{font-family:var(--font-body);font-size:14px;color:var(--color-ink);background:var(--color-surface2);border:0.5px solid var(--color-border-strong);border-radius:var(--radius);padding:10px 14px;outline:none;transition:border-color .15s}
+.nombre-input{
+  font-family:var(--font-body);font-size:14px;color:var(--color-ink);
+  background:#fff;
+  border:0.5px solid var(--color-border-strong);
+  border-radius:var(--radius);padding:10px 14px;outline:none;transition:border-color .15s;
+}
 .nombre-input:focus{border-color:var(--color-primary)}
 .nombre-input::placeholder{color:var(--color-ink-mute)}
 
-/* Upload btn */
-.btn-upload{width:100%;padding:14px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-lg);font-family:var(--font-heading);font-size:20px;letter-spacing:.02em;cursor:pointer;transition:background .15s,transform .1s}
-.btn-upload:hover{filter:brightness(.9)}
-.btn-upload:active{transform:scale(.98)}
-.btn-upload:disabled{background:var(--color-ink-mute);cursor:not-allowed}
+/* ── BOTONES (mismo estilo: gradiente maps) ── */
+.btn-action{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;
+  color:#fff;
+  font-family:var(--font-heading);font-size:18px;font-weight:600;letter-spacing:.03em;
+  padding:14px 24px;border-radius:var(--radius-lg);border:none;cursor:pointer;
+  box-shadow:0 3px 16px rgba(0,0,0,.18);
+  transition:opacity .15s,transform .12s;
+  background:linear-gradient(90deg, var(--maps-a), var(--maps-b));
+}
+.btn-action:hover{opacity:.9;transform:translateY(-1px)}
+.btn-action:active{transform:scale(.98)}
+.btn-action:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
-/* Progress */
+/* ── PROGRESS ── */
 .upload-progress{display:none;flex-direction:column;gap:8px}
 .upload-progress.visible{display:flex}
 .progress-track{height:6px;background:var(--color-surface2);border-radius:10px;overflow:hidden}
 .progress-fill{height:100%;background:var(--color-primary);border-radius:10px;transition:width .3s;width:0%}
 .progress-label{font-size:12px;color:var(--color-ink-mute);text-align:center}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--color-ink);color:#FAF7F2;padding:12px 24px;border-radius:var(--radius-lg);font-size:13px;font-family:var(--font-body);transition:transform .3s;z-index:100;white-space:nowrap}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--color-ink);color:#fff;padding:12px 24px;border-radius:var(--radius-lg);font-size:13px;font-family:var(--font-body);transition:transform .3s;z-index:100;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast.ok{background:#3D5C42}
-.toast.err{background:#7D2935}
+.toast.ok{background:var(--color-primary)}
+.toast.err{background:#B33;}
 
-/* FAB */
-.fab{position:fixed;bottom:24px;right:18px;z-index:50;width:58px;height:58px;border-radius:50%;background:var(--color-primary);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 18px rgba(0,0,0,.25);transition:transform .15s;-webkit-tap-highlight-color:transparent}
-.fab:hover{transform:scale(1.07)}
-.fab:active{transform:scale(.94)}
-
-/* Loading state */
+/* ── LOADING ── */
 .loading-overlay{position:fixed;inset:0;background:var(--color-surface);display:flex;align-items:center;justify-content:center;z-index:200;transition:opacity .3s}
 .loading-overlay.hidden{opacity:0;pointer-events:none}
 .loading-spinner{font-family:var(--font-heading);font-size:18px;color:var(--color-ink-mute)}
@@ -114,7 +163,7 @@ body{font-family:var(--font-body);background:var(--color-surface);background-siz
 </div>
 
 <div class="top-bar">
-  <a class="home-btn" href="#" id="home-btn">
+  <a class="home-btn" href="index.html" id="home-btn">
     <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
     Inicio
   </a>
@@ -149,11 +198,12 @@ body{font-family:var(--font-body);background:var(--color-surface);background-siz
       <div class="drop-sub">Fotos y videos · Máximo 10 archivos a la vez</div>
     </div>
 
-    <label style="display:block;margin-top:-8px">
+    <!-- Botón tomar foto — mismo estilo que compartir -->
+    <label style="display:block">
       <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
-      <button class="btn-camara" id="btn-camara-label" onclick="document.getElementById('camera-input').click()">
+      <div class="btn-action" style="cursor:pointer" onclick="document.getElementById('camera-input').click()">
         📷 &nbsp; Tomar foto
-      </button>
+      </div>
     </label>
 
     <div class="preview-grid" id="preview-grid"></div>
@@ -163,11 +213,10 @@ body{font-family:var(--font-body);background:var(--color-surface);background-siz
       <div class="progress-label" id="progress-label">Subiendo...</div>
     </div>
 
-    <button class="btn-upload" id="btn-upload" disabled>Compartir 💌</button>
+    <button class="btn-action" id="btn-upload" disabled>Compartir 💌</button>
   </div>
 </div>
 
-<button class="fab" id="fab-btn" aria-label="Ir arriba">📷</button>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -177,59 +226,45 @@ const BUCKET = "event-assets";
 const { createClient } = supabase;
 const sb = createClient(SB_URL, SB_KEY);
 
-// Leer event_id de la URL
 const params = new URLSearchParams(location.search);
 const EVENT_ID = params.get('event_id');
-
-let eventData = null;
 
 // ── Aplicar config al :root ──────────────────────────────────────
 function applyConfig(config) {
   if (!config) return;
   const r = document.documentElement.style;
-
-  // Palette
   if (config.palette) {
-    if (config.palette.primary)  r.setProperty('--color-primary',  config.palette.primary);
-    if (config.palette.accent)   r.setProperty('--color-accent',   config.palette.accent);
-    if (config.palette.surface)  r.setProperty('--color-surface',  config.palette.surface);
-    if (config.palette.ink)      r.setProperty('--color-ink',      config.palette.ink);
+    if (config.palette.primary) r.setProperty('--color-primary', config.palette.primary);
+    if (config.palette.accent)  r.setProperty('--color-accent',  config.palette.accent);
+    if (config.palette.surface) r.setProperty('--color-surface', config.palette.surface);
+    if (config.palette.ink)     r.setProperty('--color-ink',     config.palette.ink);
   }
-
-  // Frames maps
   if (config.frames) {
     if (config.frames.maps_a?.color) r.setProperty('--maps-a', config.frames.maps_a.color);
     if (config.frames.maps_b?.color) r.setProperty('--maps-b', config.frames.maps_b.color);
   }
-
-  // Typography — cargar Google Fonts dinámicamente
   if (config.typography) {
     const fonts = new Set();
     Object.values(config.typography).forEach(t => { if (t.font) fonts.add(t.font); });
     const families = [...fonts].map(f => `family=${f.replace(/ /g, '+')}`).join('&');
     document.getElementById('google-fonts').href =
       `https://fonts.googleapis.com/css2?${families}&display=swap`;
-
-    // Mapear roles
     const t = config.typography;
-    if (t.title?.font)   r.setProperty('--font-display',  `"${t.title.font}", cursive`);
-    if (t.display?.font) r.setProperty('--font-heading',  `"${t.display.font}", serif`);
-    if (t.caption?.font) r.setProperty('--font-body',     `"${t.caption.font}", sans-serif`);
+    if (t.title?.font)   r.setProperty('--font-display', `"${t.title.font}", cursive`);
+    if (t.display?.font) r.setProperty('--font-heading', `"${t.display.font}", serif`);
+    if (t.caption?.font) r.setProperty('--font-body',    `"${t.caption.font}", sans-serif`);
   }
 }
 
-// ── Cargar evento desde Supabase ─────────────────────────────────
+// ── Cargar evento ─────────────────────────────────────────────────
 async function loadEvent() {
   if (!EVENT_ID) {
-    // Sin event_id — modo fallback NYOWedding para desarrollo
     document.getElementById('loading-overlay').classList.add('hidden');
-    document.getElementById('top-bar-title').textContent = 'Fotos';
     return;
   }
-
   const { data, error } = await sb
     .from('events')
-    .select('id, nombre, titulo, config')
+    .select('id, nombre, titulo, config, bg_url')
     .eq('id', EVENT_ID)
     .single();
 
@@ -239,31 +274,28 @@ async function loadEvent() {
     return;
   }
 
-  eventData = data;
-
   // Aplicar look & feel
   applyConfig(data.config);
 
-  // Aplicar imagen de fondo si existe
-  if (data.config?.bg_url) {
-    document.body.style.backgroundImage = `url('${data.config.bg_url}')`;
-  } else if (data.config?.bg_pattern) {
-    // fondo con patrón CSS si no hay imagen
-    document.body.style.background = `var(--color-surface)`;
+  // Imagen de fondo desde bg_url
+  if (data.bg_url) {
+    document.body.style.backgroundImage = `url('${data.bg_url}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
   }
 
-  // Actualizar textos
+  // Textos
   const nombre = data.titulo || data.nombre || 'Evento';
   document.title = `Fotos · ${nombre}`;
   document.getElementById('top-bar-title').textContent = `${nombre} · Fotos`;
   document.getElementById('event-title').textContent = nombre;
-  document.getElementById('btn-upload').textContent = `Compartir 💌`;
 
   document.getElementById('loading-overlay').classList.add('hidden');
   loadTotalFotos();
 }
 
-// ── Compresión ───────────────────────────────────────────────────
+// ── Compresión ────────────────────────────────────────────────────
 function comprimirImagen(file, maxPx = 1920, calidad = 0.82) {
   return new Promise(resolve => {
     if (!file.type.startsWith("image/")) { resolve(file); return; }
@@ -289,7 +321,7 @@ function comprimirImagen(file, maxPx = 1920, calidad = 0.82) {
   });
 }
 
-// ── Archivos ─────────────────────────────────────────────────────
+// ── Archivos ──────────────────────────────────────────────────────
 const dropZone   = document.getElementById("drop-zone");
 const fileInput  = document.getElementById("file-input");
 const previewGrid = document.getElementById("preview-grid");
@@ -302,7 +334,6 @@ dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-ove
 dropZone.addEventListener("drop", e => { e.preventDefault(); dropZone.classList.remove("drag-over"); addFiles([...e.dataTransfer.files]); });
 fileInput.addEventListener("change", () => addFiles([...fileInput.files]));
 document.getElementById("camera-input").addEventListener("change", e => addFiles([...e.target.files]));
-document.getElementById("fab-btn").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 
 function addFiles(nuevos) {
   const rechazados = [];
@@ -310,7 +341,7 @@ function addFiles(nuevos) {
     if (f.type.startsWith("video/") && f.size > MAX_VIDEO_MB * 1024 * 1024) { rechazados.push(f.name); return false; }
     return f.type.startsWith("image/") || f.type.startsWith("video/");
   });
-  if (rechazados.length > 0) showToast(`Video muy pesado (máx ${MAX_VIDEO_MB} MB) 🎬`, "err");
+  if (rechazados.length > 0) showToast(`Video muy pesado (máx ${MAX_VIDEO_MB} MB)`, "err");
   archivos = [...archivos, ...ok].slice(0, 10);
   renderPreviews();
   btnUpload.disabled = archivos.length === 0;
@@ -324,7 +355,7 @@ function renderPreviews() {
     el.className = "preview-item";
     const esVideo = f.type.startsWith("video/");
     el.innerHTML = `${esVideo ? `<video src="${url}" muted playsinline></video>` : `<img src="${url}" alt="">`}
-      <button class="preview-remove" data-i="${i}">x</button>
+      <button class="preview-remove" data-i="${i}">✕</button>
       <span class="preview-badge">${esVideo ? "🎬" : "📷"}</span>`;
     previewGrid.appendChild(el);
   });
@@ -338,7 +369,7 @@ function renderPreviews() {
   });
 }
 
-// ── Upload ───────────────────────────────────────────────────────
+// ── Upload ────────────────────────────────────────────────────────
 btnUpload.addEventListener("click", async () => {
   if (archivos.length === 0) return;
   const nombre  = document.getElementById("nombre-input").value.trim() || "Invitado";
@@ -355,11 +386,7 @@ btnUpload.addEventListener("click", async () => {
     const f = await comprimirImagen(raw);
     const ext = f.type === "image/jpeg" ? "jpg" : raw.name.split(".").pop();
     const filename = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
-
-    // Path multi-tenant: {event_id}/fotos/{filename}
-    const path = EVENT_ID
-      ? `${EVENT_ID}/fotos/${filename}`
-      : `legacy/${filename}`;
+    const path = EVENT_ID ? `${EVENT_ID}/fotos/${filename}` : `legacy/${filename}`;
 
     lbl.textContent = `Subiendo ${i + 1} de ${archivos.length}...`;
     fill.style.width = `${Math.round((i / archivos.length) * 100)}%`;
@@ -369,19 +396,16 @@ btnUpload.addEventListener("click", async () => {
 
     const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(path);
     await sb.from('fotos').insert({
-      path,
-      url: urlData.publicUrl,
-      nombre,
+      path, url: urlData.publicUrl, nombre,
       tipo: f.type.startsWith("video/") ? "video" : "foto",
-      size: f.size,
-      event_id: EVENT_ID || null,
+      size: f.size, event_id: EVENT_ID || null,
       created_at: new Date().toISOString()
     });
     ok++;
   }
 
   fill.style.width = "100%";
-  lbl.textContent = `Listo! ${ok} archivo${ok !== 1 ? "s" : ""} compartido${ok !== 1 ? "s" : ""} 🎉`;
+  lbl.textContent = `Listo — ${ok} archivo${ok !== 1 ? "s" : ""} compartido${ok !== 1 ? "s" : ""} 🎉`;
   setTimeout(() => {
     progress.classList.remove("visible"); fill.style.width = "0%";
     archivos = []; renderPreviews(); btnUpload.disabled = true; fileInput.value = "";
@@ -390,20 +414,18 @@ btnUpload.addEventListener("click", async () => {
   showToast(ok > 0 ? "Gracias por compartir! 💌" : "Algunos archivos fallaron", ok > 0 ? "ok" : "err");
 });
 
-// ── Counter ──────────────────────────────────────────────────────
+// ── Counter ───────────────────────────────────────────────────────
 async function loadTotalFotos() {
-  let query = sb.from('fotos').select('*', { count: 'exact', head: true });
-  if (EVENT_ID) query = query.eq('event_id', EVENT_ID);
-  const { count } = await query;
+  let q = sb.from('fotos').select('*', { count: 'exact', head: true });
+  if (EVENT_ID) q = q.eq('event_id', EVENT_ID);
+  const { count } = await q;
   document.getElementById("total-fotos").textContent = count ?? 0;
-
   try {
-    let sizeQuery = sb.from('fotos').select('size');
-    if (EVENT_ID) sizeQuery = sizeQuery.eq('event_id', EVENT_ID);
-    const { data: sizes } = await sizeQuery;
+    let sq = sb.from('fotos').select('size');
+    if (EVENT_ID) sq = sq.eq('event_id', EVENT_ID);
+    const { data: sizes } = await sq;
     if (sizes) {
-      const totalBytes = sizes.reduce((sum, r) => sum + (r.size || 0), 0);
-      const mb = (totalBytes / (1024 * 1024)).toFixed(1);
+      const mb = (sizes.reduce((s, r) => s + (r.size || 0), 0) / (1024 * 1024)).toFixed(1);
       document.getElementById("storage-size").textContent = `${mb} MB usados`;
     }
   } catch (e) {}
@@ -416,7 +438,6 @@ function showToast(msg, type = "") {
   setTimeout(() => t.classList.remove("show"), 3500);
 }
 
-// ── Boot ─────────────────────────────────────────────────────────
 loadEvent();
 </script>
 </body>
