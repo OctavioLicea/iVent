@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-primary: #1B2C4E;
+  --color-accent:  #C4973A;
+  --color-surface: #FAF7F2;
+  --color-ink:     #2A1F1A;
+  --color-ink-soft:#5C4A3A;
+  --color-ink-mute:#9C8878;
+  --color-kraft:   #EDE0CB;
+  --border:        rgba(90,50,30,0.10);
+  --border-strong: rgba(90,50,30,0.22);
+  --radius:        10px;
+  --radius-lg:     16px;
+  --font-display:  "Great Vibes", cursive;
+  --font-heading:  "Cormorant Garamond", serif;
+  --font-body:     "DM Sans", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+  transition: background 0.3s;
+}
+
+/* ── BG image ── */
+body.has-bg {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+body.has-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 0;
+  pointer-events: none;
+}
+body.has-bg > * { position: relative; z-index: 1; }
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+  animation: fadeDown .5s ease both;
+}
+.header-names {
+  font-family: var(--font-display);
+  font-size: 66px;
+  color: var(--color-primary);
+  line-height: 1;
+  margin-bottom: 4px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity .12s;
+}
+body.has-bg .header-names { color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.4); }
+.header-date {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  color: var(--color-ink-mute);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+body.has-bg .header-date { color: rgba(255,255,255,.8); }
+
+/* ── Maps bar ── */
+.btn-llegar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 680px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 14px 24px;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 16px rgba(0,0,0,.18);
+  transition: opacity .15s, transform .12s;
+  animation: fadeDown .5s .08s ease both;
+}
+.btn-llegar:hover { opacity: .88; transform: translateY(-1px); }
+.btn-llegar:active { transform: scale(.98); }
+.btn-llegar svg { width: 18px; height: 18px; fill: white; flex-shrink: 0; }
+.btn-llegar-arrow { margin-left: auto; font-size: 20px; opacity: .7; }
+
+/* ── Layout central ── */
+.central {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+  align-items: stretch;
+  animation: fadeUp .5s .15s ease both;
+}
+
+/* Invitación */
+.inv-wrap {
+  flex: 1.5;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 0.5px solid var(--border-strong);
+  box-shadow: 0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.10);
+  background: var(--color-kraft);
+  min-height: 340px;
+}
+.inv-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Columna derecha */
+.right-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Nav items */
+.nav-item {
+  background: rgba(255,255,255,0.92);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 13px 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .12s;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(4px);
+}
+.nav-item:hover {
+  border-color: var(--color-accent);
+  background: rgba(255,255,255,1);
+  transform: translateY(-1px);
+}
+.nav-item:active { transform: scale(.97); }
+
+.nav-icon {
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0,0,0,.06);
+}
+.nav-body { flex: 1; min-width: 0; }
+.nav-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-sub {
+  font-size: 10.5px;
+  color: var(--color-ink-mute);
+  line-height: 1.3;
+}
+.nav-arrow { font-size: 15px; color: var(--color-ink-mute); flex-shrink: 0; }
+
+/* QR */
+.qr-card {
+  background: rgba(255,255,255,0.92);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  backdrop-filter: blur(4px);
+}
+.qr-img { width: 100%; max-width: 160px; aspect-ratio: 1; border-radius: 5px; display: block; }
+.qr-label {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--color-ink-mute);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── Estado vacío / sin event_id ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 60px;
+  text-align: center;
+  animation: fadeUp .5s ease both;
+}
+.empty-icon { font-size: 48px; opacity: .4; }
+.empty-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  color: var(--color-ink-soft);
+}
+.empty-sub { font-size: 13px; color: var(--color-ink-mute); max-width: 260px; line-height: 1.5; }
+
+/* ── Loading skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, #e8e0d6 25%, #f2ece3 50%, #e8e0d6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius);
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── Footer / versión ── */
+.version-badge {
+  position: fixed;
+  bottom: 10px;
+  right: 12px;
+  font-size: 10px;
+  font-family: var(--font-body);
+  color: var(--color-ink-mute);
+  opacity: .45;
+  letter-spacing: .04em;
+  z-index: 99;
+  pointer-events: none;
+}
+body.has-bg .version-badge { color: rgba(255,255,255,.6); }
+
+/* ── Animations ── */
+@keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(10px)}  to{opacity:1;transform:translateY(0)} }
+
+/* ── Responsive ── */
+@media(max-width:500px) {
+  .header-names { font-size: 50px; }
+  .central { flex-direction: column; }
+  .inv-wrap { min-height: 260px; flex: none; }
+  .right-col { gap: 8px; }
+  .qr-card { flex-direction: row; padding: 10px 14px; gap: 12px; }
+  .qr-img { max-width: 130px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Contenido se inyecta por JS -->
+<div id="app"></div>
+
+<!-- Timestamp de versión -->
+<div class="version-badge" id="version-badge">v 2026-06-08 · iVent</div>
+
+<script>
+const SUPABASE_URL  = 'https://qoaxifnrlxxwwdzqxmot.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvYXhpZm5ybHh4d3dkenF4bW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MDY5MTUsImV4cCI6MjA5NDI4MjkxNX0.kW9xOfMslcra92rcxe9Jz4vspsmen4jNuxdVc_29z9Q';
+
+// Módulos disponibles: clave → { label, sub, icon, path }
+const MODULE_CONFIG = {
+  fotos:   { label: 'Subir foto',         sub: 'Comparte tu momento',         icon: '📸', path: 'app/event-PhotoUpload.html' },
+  collage: { label: 'Collage en vivo',    sub: 'Fotos en tiempo real',        icon: '🖼️', path: 'app/event-LiveBoard.html'  },
+  crono:   { label: 'Cronograma',         sub: 'El plan del día',             icon: '🕐', path: 'app/event-Crono.html'      },
+  mesas:   { label: 'Mesas',             sub: 'Encuentra tu lugar',          icon: '🪑', path: 'app/event-Mesas.html'      },
+  deseos:  { label: 'Deja un deseo',      sub: 'Mensaje para los festejados', icon: '💌', path: 'app/event-Deseos.html'     },
+};
+
+async function sbFetch(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${SUPABASE_ANON}`,
+    }
+  });
+  if (!res.ok) throw new Error(`Supabase error ${res.status}`);
+  return res.json();
+}
+
+function getEventId() {
+  return new URLSearchParams(window.location.search).get('event_id');
+}
+
+function applyPalette(config) {
+  const p = config?.palette || {};
+  if (p.primary)  document.documentElement.style.setProperty('--color-primary', p.primary);
+  if (p.accent)   document.documentElement.style.setProperty('--color-accent',  p.accent);
+  if (p.surface)  document.documentElement.style.setProperty('--color-surface', p.surface);
+  if (p.ink)      document.documentElement.style.setProperty('--color-ink',     p.ink);
+
+  // Actualiza bg del body
+  document.body.style.background = p.surface || '#FAF7F2';
+}
+
+function applyTypography(config) {
+  const t = config?.typography || {};
+  const display = t.display?.family || 'Great Vibes';
+  const heading = t.heading?.family || 'Cormorant Garamond';
+  const body    = t.body?.family    || 'DM Sans';
+  document.documentElement.style.setProperty('--font-display', `"${display}", cursive`);
+  document.documentElement.style.setProperty('--font-heading', `"${heading}", serif`);
+  document.documentElement.style.setProperty('--font-body',    `"${body}", sans-serif`);
+}
+
+function applyBackground(bgUrl) {
+  if (!bgUrl) return;
+  document.body.style.backgroundImage = `url('${bgUrl}')`;
+  document.body.classList.add('has-bg');
+}
+
+function formatDate(fecha) {
+  if (!fecha) return '';
+  try {
+    const d = new Date(fecha + 'T12:00:00');
+    return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return fecha; }
+}
+
+function buildMapsBar(lugar, urlLugar, config) {
+  const frames = config?.frames || {};
+  const mapsA  = frames['maps-a']?.color || 'var(--color-primary)';
+  const mapsB  = frames['maps-b']?.color || mapsA;
+  const href   = urlLugar || '#';
+  const target = urlLugar ? '_blank' : '_self';
+  const rel    = urlLugar ? 'noopener noreferrer' : '';
+
+  return `
+  <a class="btn-llegar" href="${href}" target="${target}" rel="${rel}"
+     style="background: linear-gradient(90deg, ${mapsA}, ${mapsB}); box-shadow: 0 3px 16px ${mapsA}55;">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+    ${lugar || '¿Cómo llegar?'}
+    <span class="btn-llegar-arrow">›</span>
+  </a>`;
+}
+
+function buildModules(modules, eventId) {
+  if (!modules || typeof modules !== 'object') return '';
+  return Object.entries(MODULE_CONFIG)
+    .filter(([key]) => {
+      const m = modules[key];
+      return m === true || m?.active === true || m?.activo === true;
+    })
+    .map(([key, cfg]) => {
+      const url = `${cfg.path}?event_id=${eventId}`;
+      return `
+      <a class="nav-item" href="${url}">
+        <div class="nav-icon">${cfg.icon}</div>
+        <div class="nav-body">
+          <div class="nav-title">${cfg.label}</div>
+          <div class="nav-sub">${cfg.sub}</div>
+        </div>
+        <span class="nav-arrow">›</span>
+      </a>`;
+    }).join('');
+}
+
+function buildQR(qrUrl) {
+  if (!qrUrl) return '';
+  return `
+  <div class="qr-card">
+    <img class="qr-img" src="${qrUrl}" alt="QR del evento" loading="lazy">
+    <div class="qr-label">Comparte con los invitados</div>
+  </div>`;
+}
+
+function buildSkeleton() {
+  return `
+  <div class="header">
+    <div class="skeleton" style="width:220px;height:60px;margin:0 auto 8px;border-radius:8px"></div>
+    <div class="skeleton" style="width:160px;height:14px;margin:0 auto;border-radius:4px"></div>
+  </div>
+  <div class="skeleton" style="width:100%;max-width:680px;height:52px;border-radius:16px;margin-bottom:16px"></div>
+  <div class="central" style="max-width:680px;width:100%">
+    <div class="skeleton inv-wrap" style="min-height:340px;flex:1.5"></div>
+    <div class="right-col" style="flex:1">
+      ${[1,2,3].map(()=>`<div class="skeleton" style="height:62px;border-radius:16px"></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function buildEmptyState() {
+  return `
+  <div class="header">
+    <div class="header-names">iVent</div>
+  </div>
+  <div class="empty-state">
+    <div class="empty-icon">🔗</div>
+    <div class="empty-title">Abre este link desde tu invitación</div>
+    <div class="empty-sub">El link correcto incluye el código de tu evento. Revisa el mensaje que recibiste.</div>
+  </div>`;
+}
+
+async function init() {
+  const app = document.getElementById('app');
+  const eventId = getEventId();
+
+  if (!eventId) {
+    app.innerHTML = buildEmptyState();
+    return;
+  }
+
+  // Mostrar skeleton mientras carga
+  app.innerHTML = buildSkeleton();
+
+  try {
+    const rows = await sbFetch(
+      `events?id=eq.${eventId}&select=name,title,fecha,hora,lugar,url_lugar,bg_url,flyer_url,qr_url,config&limit=1`
+    );
+
+    if (!rows || rows.length === 0) {
+      app.innerHTML = buildEmptyState();
+      return;
+    }
+
+    const ev = rows[0];
+    const config = ev.config || {};
+
+    // Aplicar estilos del evento
+    applyPalette(config);
+    applyTypography(config);
+    applyBackground(ev.bg_url);
+
+    // Título — usa title si existe, si no name
+    const displayName = ev.title || ev.name || 'Evento';
+    const dateStr = [formatDate(ev.fecha), ev.hora].filter(Boolean).join(' · ');
+    const modules = config.modules || {};
+
+    app.innerHTML = `
+      <div class="header">
+        <div class="header-names">${displayName}</div>
+        ${dateStr ? `<div class="header-date">${dateStr}</div>` : ''}
+      </div>
+
+      ${buildMapsBar(ev.lugar, ev.url_lugar, config)}
+
+      <div class="central">
+        <div class="inv-wrap">
+          ${ev.flyer_url
+            ? `<img class="inv-img" src="${ev.flyer_url}" alt="Invitación" loading="lazy">`
+            : `<div style="width:100%;height:100%;min-height:340px;background:var(--color-kraft)"></div>`}
+        </div>
+        <div class="right-col">
+          ${buildModules(modules, eventId)}
+          ${buildQR(ev.qr_url)}
+        </div>
+      </div>
+    `;
+
+  } catch (err) {
+    console.error('iVent error:', err);
+    app.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">No se pudo cargar el evento</div>
+        <div class="empty-sub">Verifica tu conexión e intenta de nuevo.</div>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
