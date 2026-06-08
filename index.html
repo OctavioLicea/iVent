@@ -2,10 +2,307 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=login.html">
-<title>iVent</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento</title>
+<link id="google-fonts" rel="stylesheet" href="">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --color-primary:#7D2935;
+  --color-accent:#9C6B2E;
+  --color-surface:#FAF7F2;
+  --color-ink:#2A1F1A;
+  --color-ink-soft:#5C4A3A;
+  --color-ink-mute:#9C8878;
+  --color-surface2:#F2EBE0;
+  --color-border:rgba(90,50,30,0.10);
+  --color-border-strong:rgba(90,50,30,0.22);
+  --color-primary-light:color-mix(in srgb, var(--color-primary) 10%, white);
+  --font-display:"Great Vibes",cursive;
+  --font-heading:"Cormorant Garamond",serif;
+  --font-body:"DM Sans",sans-serif;
+  --maps-a:#1B2C4E;
+  --maps-b:#C4973A;
+  --radius:10px;--radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{
+  font-family:var(--font-body);
+  background-color:var(--color-surface);
+  background-size:cover;background-position:center;background-attachment:fixed;
+  color:var(--color-ink);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;
+}
+
+/* ── HEADER ── */
+.header{text-align:center;margin-bottom:16px;animation:fadeDown .5s ease both}
+.header-names{font-family:var(--font-display);font-size:66px;color:var(--color-primary);line-height:1;margin-bottom:4px}
+.header-date{font-family:var(--font-heading);font-size:13px;color:var(--color-ink-mute);letter-spacing:.12em;text-transform:uppercase}
+
+/* ── MAPS BAR ── */
+.btn-llegar{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;max-width:680px;
+  background:linear-gradient(90deg, var(--maps-a), var(--maps-b));
+  color:#fff;font-family:var(--font-heading);font-size:18px;font-weight:600;letter-spacing:.03em;
+  padding:14px 24px;border-radius:var(--radius-lg);text-decoration:none;
+  margin-bottom:16px;box-shadow:0 3px 16px rgba(0,0,0,.18);
+  transition:opacity .15s,transform .12s;animation:fadeDown .5s .08s ease both;
+}
+.btn-llegar:hover{opacity:.9;transform:translateY(-1px)}
+.btn-llegar:active{transform:scale(.98)}
+.btn-llegar-arrow{margin-left:auto;font-size:20px;opacity:.7}
+
+/* ── CENTRAL — layout clásico ── */
+.central{display:flex;gap:14px;width:100%;max-width:680px;align-items:stretch;animation:fadeUp .5s .15s ease both}
+
+/* Invitación */
+.inv-wrap{
+  flex:1.5;border-radius:var(--radius-lg);overflow:hidden;
+  border:0.5px solid var(--color-border-strong);
+  box-shadow:0 4px 24px rgba(42,31,26,.12);
+  background:var(--color-surface2);
+  min-height:260px;display:flex;align-items:center;justify-content:center;
+}
+.inv-img{width:100%;height:100%;object-fit:cover;display:block}
+.inv-placeholder{font-family:var(--font-display);font-size:28px;color:var(--color-primary);padding:20px;text-align:center}
+
+/* Columna derecha */
+.right-col{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+
+/* Módulos */
+.nav-item{
+  background:#fff;
+  border:0.5px solid var(--color-border-strong);
+  border-radius:var(--radius-lg);padding:13px 14px;cursor:pointer;
+  transition:border-color .15s,background .15s,transform .12s;
+  text-decoration:none;color:inherit;display:flex;align-items:center;gap:11px;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-item:hover{border-color:var(--color-primary);background:var(--color-primary-light);transform:translateY(-1px)}
+.nav-item:active{transform:scale(.97)}
+.nav-icon{font-size:18px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--color-surface2)}
+.nav-body{flex:1;min-width:0}
+.nav-title{font-family:var(--font-heading);font-size:15px;font-weight:600;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-sub{font-size:10.5px;color:var(--color-ink-mute);line-height:1.3}
+.nav-arrow{font-size:15px;color:var(--color-ink-mute);flex-shrink:0}
+
+/* QR */
+.qr-card{background:#fff;border:0.5px solid var(--color-border-strong);border-radius:var(--radius-lg);padding:10px;display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:auto}
+.qr-img{width:100%;max-width:160px;aspect-ratio:1;border-radius:5px;display:block}
+.qr-label{font-family:var(--font-heading);font-style:italic;font-size:11px;color:var(--color-ink-mute);text-align:center;line-height:1.3}
+
+/* Footer */
+.footer{margin-top:20px;font-size:11px;color:var(--color-ink-mute);opacity:.4;text-align:center}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:var(--color-surface);display:flex;align-items:center;justify-content:center;z-index:200;transition:opacity .3s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.loading-spinner{font-family:var(--font-heading);font-size:18px;color:var(--color-ink-mute)}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:500px){
+  .header-names{font-size:50px}
+  .central{flex-direction:column}
+  .inv-wrap{min-height:220px;flex:none}
+  .right-col{gap:8px}
+  .qr-card{flex-direction:row;padding:10px 14px;gap:12px}
+  .qr-img{max-width:130px}
+}
+</style>
 </head>
 <body>
-<script>window.location.replace('login.html');</script>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner">Cargando evento…</div>
+</div>
+
+<div class="header" id="header">
+  <div class="header-names" id="header-names"></div>
+  <div class="header-date" id="header-date"></div>
+</div>
+
+<a class="btn-llegar" id="btn-llegar" href="#" target="_blank" rel="noopener">
+  <span>📍</span>
+  <span id="btn-llegar-label">¿Cómo llegar?</span>
+  <span class="btn-llegar-arrow">›</span>
+</a>
+
+<div class="central">
+  <div class="inv-wrap" id="inv-wrap">
+    <div class="inv-placeholder" id="inv-placeholder"></div>
+  </div>
+  <div class="right-col" id="right-col">
+    <!-- módulos se renderizan aquí -->
+    <div class="qr-card" id="qr-card" style="display:none">
+      <img class="qr-img" id="qr-img" src="" alt="QR">
+      <div class="qr-label">Escanea para unirte</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer" id="footer"></div>
+
+<script>
+const SB_URL = "https://qoaxifnrlxxwwdzqxmot.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvYXhpZm5ybHh4d3dkenF4bW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MDY5MTUsImV4cCI6MjA5NDI4MjkxNX0.kW9xOfMslcra92rcxe9Jz4vspsmen4jNuxdVc_29z9Q";
+const { createClient } = supabase;
+const sb = createClient(SB_URL, SB_KEY);
+
+const params  = new URLSearchParams(location.search);
+const EVENT_ID = params.get('event_id');
+
+// Configuración de módulos: icono, subtítulo, ruta
+const MODULE_CONFIG = {
+  fotos:   { icon:'📸', sub:'Comparte el momento',   path:'app/event-PhotoUpload.html' },
+  collage: { icon:'🖼️', sub:'Fotos en tiempo real',  path:'app/event-LiveBoard.html' },
+  crono:   { icon:'🕐', sub:'Timeline del día',       path:'app/event-Crono.html' },
+  mesas:   { icon:'🪑', sub:'Encuentra tu lugar',     path:'app/event-Mesas.html' },
+  deseos:  { icon:'💌', sub:'Escríbenos algo',        path:'app/event-Deseos.html' },
+};
+
+// ── Aplicar config al :root ──────────────────────────────────────
+function applyConfig(config) {
+  if (!config) return;
+  const r = document.documentElement.style;
+  if (config.palette) {
+    if (config.palette.primary) r.setProperty('--color-primary', config.palette.primary);
+    if (config.palette.accent)  r.setProperty('--color-accent',  config.palette.accent);
+    if (config.palette.surface) r.setProperty('--color-surface', config.palette.surface);
+    if (config.palette.ink)     r.setProperty('--color-ink',     config.palette.ink);
+  }
+  if (config.frames) {
+    if (config.frames.maps_a?.color) r.setProperty('--maps-a', config.frames.maps_a.color);
+    if (config.frames.maps_b?.color) r.setProperty('--maps-b', config.frames.maps_b.color);
+  }
+  if (config.typography) {
+    const fonts = new Set();
+    Object.values(config.typography).forEach(t => { if (t.font) fonts.add(t.font); });
+    const families = [...fonts].map(f => `family=${f.replace(/ /g, '+')}`).join('&');
+    document.getElementById('google-fonts').href =
+      `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    const t = config.typography;
+    if (t.title?.font)   r.setProperty('--font-display', `"${t.title.font}", cursive`);
+    if (t.display?.font) r.setProperty('--font-heading', `"${t.display.font}", serif`);
+    if (t.caption?.font) r.setProperty('--font-body',    `"${t.caption.font}", sans-serif`);
+  }
+}
+
+// ── Formatear fecha ───────────────────────────────────────────────
+function formatDate(dateStr, timeStr, venue) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let txt = `${dias[d.getDay()]} ${d.getDate()} · ${meses[d.getMonth()]} · ${d.getFullYear()}`;
+  if (timeStr) txt += ` · ${timeStr}`;
+  if (venue) txt += ` · ${venue}`;
+  return txt;
+}
+
+// ── Renderizar módulos ────────────────────────────────────────────
+function renderModules(modules) {
+  const rightCol = document.getElementById('right-col');
+  const qrCard   = document.getElementById('qr-card');
+
+  // Insertar módulos antes del QR
+  const moduleOrder = ['fotos','collage','crono','mesas','deseos'];
+  moduleOrder.forEach(key => {
+    const mod = modules?.[key];
+    if (!mod?.active) return;
+    const cfg = MODULE_CONFIG[key];
+    if (!cfg) return;
+
+    const url = `${cfg.path}${EVENT_ID ? '?event_id=' + EVENT_ID : ''}`;
+    const el = document.createElement('a');
+    el.className = 'nav-item';
+    el.href = url;
+    el.innerHTML = `
+      <div class="nav-icon">${cfg.icon}</div>
+      <div class="nav-body">
+        <div class="nav-title">${mod.label || key}</div>
+        <div class="nav-sub">${cfg.sub}</div>
+      </div>
+      <div class="nav-arrow">›</div>`;
+    rightCol.insertBefore(el, qrCard);
+  });
+}
+
+// ── Cargar evento ─────────────────────────────────────────────────
+async function loadEvent() {
+  if (!EVENT_ID) {
+    // Sin event_id — mostrar mensaje
+    document.getElementById('header-names').textContent = 'iVent';
+    document.getElementById('header-date').textContent = 'Abre este link desde tu invitación';
+    document.getElementById('btn-llegar').style.display = 'none';
+    document.getElementById('loading-overlay').classList.add('hidden');
+    return;
+  }
+
+  const { data, error } = await sb
+    .from('events')
+    .select('id, nombre, titulo, fecha, hora, lugar, url_lugar, config, bg_url, flyer_url, qr_url')
+    .eq('id', EVENT_ID)
+    .single();
+
+  if (error || !data) {
+    document.getElementById('header-names').textContent = 'Evento no encontrado';
+    document.getElementById('btn-llegar').style.display = 'none';
+    document.getElementById('loading-overlay').classList.add('hidden');
+    return;
+  }
+
+  // Aplicar look & feel
+  applyConfig(data.config);
+
+  // Fondo
+  if (data.bg_url) {
+    document.body.style.backgroundImage = `url('${data.bg_url}')`;
+  }
+
+  // Título
+  const nombre = data.titulo || data.nombre || 'Evento';
+  document.title = nombre;
+  document.getElementById('header-names').textContent = nombre;
+  document.getElementById('header-date').textContent = formatDate(data.fecha, data.hora, data.lugar);
+
+  // Barra maps
+  const btnLlegar = document.getElementById('btn-llegar');
+  if (data.url_lugar) {
+    btnLlegar.href = data.url_lugar;
+    document.getElementById('btn-llegar-label').textContent = data.lugar || '¿Cómo llegar?';
+  } else {
+    btnLlegar.style.pointerEvents = 'none';
+    btnLlegar.style.opacity = '0.7';
+  }
+
+  // Imagen de invitación
+  const invWrap = document.getElementById('inv-wrap');
+  if (data.flyer_url) {
+    invWrap.innerHTML = `<img class="inv-img" src="${data.flyer_url}" alt="Invitación">`;
+  } else {
+    document.getElementById('inv-placeholder').textContent = nombre;
+  }
+
+  // Módulos
+  renderModules(data.config?.modules);
+
+  // QR
+  if (data.qr_url) {
+    document.getElementById('qr-img').src = data.qr_url;
+    document.getElementById('qr-card').style.display = 'flex';
+  }
+
+  // Footer
+  document.getElementById('footer').textContent = nombre;
+
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+loadEvent();
+</script>
 </body>
 </html>
