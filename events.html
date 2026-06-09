@@ -654,7 +654,7 @@ async function loadEvents() {
     .from('events')
     .select('*, event_types(slug, label, icon)')
     .eq('created_by', currentUser.id)
-    .order('fecha_inicio', { ascending: true });
+    .order('start_date', { ascending: true });
 
   const grid = document.getElementById('events-grid');
 
@@ -693,8 +693,8 @@ function formatDate(dateStr) {
 
 function getStatus(ev) {
   const now = new Date();
-  const start = ev.fecha_inicio ? new Date(ev.fecha_inicio) : null;
-  const end = ev.fecha_fin ? new Date(ev.fecha_fin) : start;
+  const start = ev.start_date ? new Date(ev.start_date) : null;
+  const end = ev.end_date ? new Date(ev.end_date) : start;
   if (!start) return { key: 'draft', label: 'Borrador' };
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -707,8 +707,8 @@ function getStatus(ev) {
 function renderEventCard(ev) {
   const type = ev.event_types || { icon: '🎉', label: 'Evento' };
   const status = getStatus(ev);
-  const dateStr = formatDate(ev.fecha_inicio);
-  const venue = ev.lugar || '';
+  const dateStr = formatDate(ev.start_date);
+  const venue = ev.venue || '';
 
   return `
     <div class="event-card" onclick="openEvent('${ev.id}')">
@@ -720,8 +720,8 @@ function renderEventCard(ev) {
         <div class="card-status ${status.key}">${status.label}</div>
       </div>
       <div>
-        <div class="card-name">${ev.nombre}</div>
-        ${ev.titulo ? `<div class="card-title">${ev.titulo}</div>` : ''}
+        <div class="card-name">${ev.name}</div>
+        ${ev.title ? `<div class="card-title">${ev.title}</div>` : ''}
       </div>
       <div class="card-meta">
         ${dateStr ? `<div class="card-meta-row"><span class="card-meta-icon">📅</span>${dateStr}</div>` : ''}
@@ -777,15 +777,15 @@ async function handleCreateEvent() {
 
   const payload = {
     created_by: currentUser.id,
-    nombre: name,
-    titulo: document.getElementById('new-title').value.trim() || null,
-    subtitulo: document.getElementById('new-subtitle').value.trim() || null,
-    tipo_id: selectedTypeId,
-    fecha_inicio: startDate,
-    fecha_fin: document.getElementById('new-date-end').value || null,
-    hora_inicio: document.getElementById('new-time').value || null,
-    lugar: document.getElementById('new-venue').value.trim() || null,
-    url_lugar: document.getElementById('new-venue-url').value.trim() || null,
+    name: name,
+    title: document.getElementById('new-title').value.trim() || null,
+    subtitle: document.getElementById('new-subtitle').value.trim() || null,
+    type_id: selectedTypeId,
+    start_date: startDate,
+    end_date: document.getElementById('new-date-end').value || null,
+    start_time: document.getElementById('new-time').value || null,
+    venue: document.getElementById('new-venue').value.trim() || null,
+    url_venue: document.getElementById('new-venue-url').value.trim() || null,
     config: {}
   };
 
