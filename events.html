@@ -732,8 +732,7 @@ function renderEventCard(ev) {
 }
 
 function openEvent(eventId) {
-  sessionStorage.setItem('ivent_event_id', eventId);
-  window.location.href = 'app/event-designer.html';
+  window.location.href = `app/event-designer.html?event_id=${eventId}`;
 }
 
 function openModal() {
