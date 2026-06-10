@@ -38,7 +38,7 @@ body {
   transition: background 0.3s;
 }
 
-/* ── BG image ── */
+/* ── BG image OL 1919  ── */
 body.has-bg {
   background-size: cover;
   background-position: center;
@@ -346,13 +346,13 @@ function formatDate(fecha) {
   } catch { return fecha; }
 }
 
-function buildMapsBar(lugar, urlLugar, config) {
+function buildMapsBar(venue, venueUrl, config) {
   const frames = config?.frames || {};
   const mapsA  = frames['maps-a']?.color || 'var(--color-primary)';
   const mapsB  = frames['maps-b']?.color || mapsA;
-  const href   = urlLugar || '#';
-  const target = urlLugar ? '_blank' : '_self';
-  const rel    = urlLugar ? 'noopener noreferrer' : '';
+  const href   = venueUrl || '#';
+  const target = venueUrl ? '_blank' : '_self';
+  const rel    = venueUrl ? 'noopener noreferrer' : '';
 
   return `
   <a class="btn-llegar" href="${href}" target="${target}" rel="${rel}"
@@ -360,7 +360,7 @@ function buildMapsBar(lugar, urlLugar, config) {
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
-    ${lugar || '¿Cómo llegar?'}
+    ${venue || '¿Cómo llegar?'}
     <span class="btn-llegar-arrow">›</span>
   </a>`;
 }
@@ -436,7 +436,7 @@ async function init() {
 
   try {
     const rows = await sbFetch(
-      `events?id=eq.${eventId}&select=name,title,fecha,hora,lugar,url_lugar,bg_url,flyer_url,qr_url,config&limit=1`
+      `events?id=eq.${eventId}&select=name,title,start_date,start_time,venue,venue_url,bg_url,flyer_url,qr_url,config&limit=1`
     );
 
     if (!rows || rows.length === 0) {
@@ -454,7 +454,7 @@ async function init() {
 
     // Título — usa title si existe, si no name
     const displayName = ev.title || ev.name || 'Evento';
-    const dateStr = [formatDate(ev.fecha), ev.hora].filter(Boolean).join(' · ');
+    const dateStr = [formatDate(ev.start_date), ev.start_time].filter(Boolean).join(' · ');
     const modules = config.modules || {};
 
     app.innerHTML = `
@@ -463,7 +463,7 @@ async function init() {
         ${dateStr ? `<div class="header-date">${dateStr}</div>` : ''}
       </div>
 
-      ${buildMapsBar(ev.lugar, ev.url_lugar, config)}
+      ${buildMapsBar(ev.venue, ev.venue_url, config)}
 
       <div class="central">
         <div class="inv-wrap">
