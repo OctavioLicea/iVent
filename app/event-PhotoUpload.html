@@ -38,7 +38,7 @@ body{
   min-height:100vh;
 }
 
-/* ── TOP BAR — igual que event-designer ── */
+/* ── TOP BAR — igual que event-designer OL 1634  ── */
 .top-bar{
   height:56px;background:var(--topnav);
   border-bottom:1px solid rgba(196,151,58,0.15);
@@ -267,7 +267,7 @@ async function loadEvent() {
   }
   const { data, error } = await sb
     .from('events')
-    .select('id, nombre, titulo, config, bg_url')
+    .select('id, name, title, config, bg_url')
     .eq('id', EVENT_ID)
     .single();
 
@@ -289,7 +289,7 @@ async function loadEvent() {
   }
 
   // Textos
-  const nombre = data.titulo || data.nombre || 'Evento';
+  const nombre = data.title || data.name || 'Evento';
   document.title = `Fotos · ${nombre}`;
   document.getElementById('top-bar-title').textContent = `${nombre} · Fotos`;
   document.getElementById('event-title').textContent = nombre;
@@ -398,8 +398,8 @@ btnUpload.addEventListener("click", async () => {
     if (upErr) { console.error(upErr); continue; }
 
     const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(path);
-    await sb.from('fotos').insert({
-      path, url: urlData.publicUrl, nombre,
+    await sb.from('photos').insert({
+      path, url: urlData.publicUrl, name: nombre,
       tipo: f.type.startsWith("video/") ? "video" : "foto",
       size: f.size, event_id: EVENT_ID || null,
       created_at: new Date().toISOString()
@@ -419,12 +419,12 @@ btnUpload.addEventListener("click", async () => {
 
 // ── Counter ───────────────────────────────────────────────────────
 async function loadTotalFotos() {
-  let q = sb.from('fotos').select('*', { count: 'exact', head: true });
+  let q = sb.from('photos').select('*', { count: 'exact', head: true });
   if (EVENT_ID) q = q.eq('event_id', EVENT_ID);
   const { count } = await q;
   document.getElementById("total-fotos").textContent = count ?? 0;
   try {
-    let sq = sb.from('fotos').select('size');
+    let sq = sb.from('photos').select('size');
     if (EVENT_ID) sq = sq.eq('event_id', EVENT_ID);
     const { data: sizes } = await sq;
     if (sizes) {
