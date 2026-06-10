@@ -38,7 +38,7 @@ body{
   min-height:100vh;
 }
 
-/* ── TOP BAR — igual que event-designer OL 1634  ── */
+/* ── TOP BAR — igual que event-designer OL 1856   ── */
 .top-bar{
   height:56px;background:var(--topnav);
   border-bottom:1px solid rgba(196,151,58,0.15);
@@ -400,7 +400,7 @@ btnUpload.addEventListener("click", async () => {
     const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(path);
     await sb.from('photos').insert({
       path, url: urlData.publicUrl, name: nombre,
-      tipo: f.type.startsWith("video/") ? "video" : "foto",
+      type: f.type.startsWith("video/") ? "video" : "foto",
       size: f.size, event_id: EVENT_ID || null,
       created_at: new Date().toISOString()
     });
