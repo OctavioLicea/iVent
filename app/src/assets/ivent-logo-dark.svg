@@ -1,0 +1,12 @@
+<!-- Asset: ivent-logo-dark.svg — uso en fondos claros (cards, documentos, fondos blancos) -->
+<!-- Cambio: arcos en dorado #C9A84C, texto "ivent" en negro/marino #111111 -->
+<!-- 2026-06-12 19:10 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="58 54 284 226" width="284" height="226" role="img" aria-label="ivent logo">
+  <g fill="none" stroke="#C9A84C" stroke-linecap="round" stroke-linejoin="round" transform="translate(200 101) scale(0.773) translate(-200 -101)">
+    <path d="M35,150 C82,150 168,96 200,52 C232,96 318,150 365,150" stroke-width="16.8"></path>
+    <path d="M85,150 C122,150 176,108 200,74 C224,108 278,150 315,150" stroke-width="15.5"></path>
+    <path d="M135,150 C162,150 188,122 200,94 C212,122 238,150 265,150" stroke-width="14.2"></path>
+  </g>
+
+  <text x="200" y="258" text-anchor="middle" font-family="Poppins, &#39;Helvetica Neue&#39;, Arial, sans-serif" font-size="118" font-weight="500" fill="#111111" letter-spacing="-5">ıvent</text>
+</svg>
