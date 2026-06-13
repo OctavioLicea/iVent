@@ -1,13 +1,11 @@
-// Cambio a archivo C:\Users\octav\iVent\app\public\404.html
-// 13:35 01:54
-// Redirige 404 de GitHub Pages al index con la ruta en el query string
-
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
+    <!-- app/public/404.html -->
+    <!-- Cambio: SPA redirect handler para GitHub Pages -->
+    <!-- 2026-06-13 10:35 -->
     <script>
-      // Redirige 404 de GitHub Pages al index con la ruta en el query string
       var l = window.location;
       l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
         l.pathname.split('/').slice(0, 2).join('/') +
