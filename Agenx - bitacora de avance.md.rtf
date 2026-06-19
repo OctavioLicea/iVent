@@ -1,0 +1,65 @@
+BITÁCORA DE SESIONES DE TRABAJO — AGENX
+
+## Sesión 1 — fin: 2026-06-17, 23:05 hrs
+
+Alcance acordado para Fase 1: captación de propiedades, alta de leads
+(gestión de WhatsApp/llamadas) y gestión de citas. Fase 2 (después, sin
+diseñar a detalle todavía): gestión de trámites (documentos sensibles
+con RLS) y cierre & post venta. El dolor #1 identificado es la
+dispersión de interacciones por WhatsApp sin etapa ni nombre asociado.
+
+Modelo de datos decidido (ya validado en agenx_schema.sql):
+- contactos: entidad central (no "prospectos"); teléfono es el único
+  dato obligatorio al capturar una interacción; nombre queda null hasta
+  identificarse y es el gate obligatorio para agendar una visita
+  (aplicado con trigger en BD, no solo en UI); etapa del embudo: nuevo
+  -> calificacion -> interesado -> en_proceso_cierre -> cerrado, con
+  salida lateral a "perdido" desde cualquiera de las primeras cuatro;
+  los roles (cliente/propietario/colega) se infieren por relación, no
+  se guardan como campo.
+- propiedades: versión ligera; estado con su propio mini-embudo:
+  captacion -> disponible -> en_proceso -> cerrada; ficha_completa
+  boolean independiente (no bloquea publicar); campo ficha (jsonb)
+  como contenedor flexible para los datos de ficha técnica completa
+  (legal, fiscal, servicios, planos) que se diseñarán en Fase 2;
+  url_facebook / url_instagram / url_tiktok para encontrar rápido sus
+  publicaciones; contacto_propietario_id liga a quien trajo la propiedad.
+- interacciones: contacto_id obligatorio, propiedad_id opcional (flujo
+  A = viene de una propiedad publicada; flujo B = consulta general de
+  zona); canal (whatsapp/llamada/otro); direccion (entrante/saliente);
+  fuente (letrero/facebook/instagram/tiktok/recomendacion/otro) para
+  saber qué canal da más leads; nota libre.
+- fotos_propiedad: dispara la geolocalización de la propiedad vía EXIF.
+- visitas: contacto_id + propiedad_id obligatorios; bloqueada por
+  trigger si el contacto no tiene nombre.
+
+WhatsApp v1: registro manual de interacciones (sin API oficial de Meta
+todavía). La automatización vía webhook/Edge Function queda para una
+fase posterior.
+
+Captura pública / liga al cliente: decidido posponer a Fase 2, junto
+con el módulo de Documentos — mismo patrón de seguridad (Edge Function
++ token con expiración, nunca acceso directo a la tabla desde el
+navegador del cliente).
+
+Multi-tenant (colegas de Nydia): no requiere cambios de diseño — la
+RLS por user_id ya aísla completamente entre cuentas distintas.
+Pendiente solo si algún día se necesita co-listar una propiedad entre
+dos usuarios de Agenx (no pedido todavía).
+
+Infraestructura Supabase: la base de datos se comparte con otra app
+("ivent"); todos los objetos de Agenx viven en el esquema agenx, no en
+public. Pendiente antes de tocar el front:
+1. Ejecutar agenx_schema.sql en el proyecto real de Supabase.
+2. Dashboard > Project Settings > Data API > Exposed schemas > agregar "agenx".
+3. Inicializar el cliente de Supabase en el front con db: { schema: 'agenx' }.
+
+Entregables de esta sesión: PPTX del roadmap de módulos (3 azules con
+detalle + 2 rojos como placeholder de Fase 2), y agenx_schema.sql — la
+versión vigente del esquema, ya probada contra Postgres real con los
+roles de Supabase (RLS y la regla de "sin nombre no hay cita"
+confirmadas funcionando).
+
+Para la próxima sesión: correr la migración en Supabase, resolver los
+2 pasos manuales de arriba, y empezar el front — probablemente
+arrancando por contactos + interacciones, que es el dolor #1.
