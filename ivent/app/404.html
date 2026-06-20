@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8">
     <!-- app/public/404.html -->
-    <!-- Cambio: SPA redirect handler para GitHub Pages -->
-    <!-- 2026-06-13 10:35 -->
+    <!-- Cambio: slice(0,2) -> slice(0,3) -- la base ahora es /ivent/app (3 segmentos: '', ivent, app), no /ivent (2 segmentos). El valor viejo calculaba mal la base de redirect y causaba loop infinito, porque /ivent/ a secas no tiene index.html (la landing aun no existe) -->
+    <!-- 2026-06-19 20:18 -->
     <script>
       var l = window.location;
       l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 2).join('/') +
+        l.pathname.split('/').slice(0, 3).join('/') +
         '/?p=' + encodeURIComponent(l.pathname.slice(1) + l.search) +
         (l.hash || ''));
     </script>
