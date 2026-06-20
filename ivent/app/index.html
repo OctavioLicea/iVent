@@ -1,0 +1,26 @@
+<!-- app/index.html -->
+<!-- Cambio: agregar SPA redirect handler para GitHub Pages 404 + title/lang -->
+<!-- 2026-06-13 09:40 -->
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/ivent/app/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iVent</title>
+    <script>
+      (function() {
+        var p = window.location.search.slice(1);
+        if (p && p.indexOf('p=') === 0) {
+          var decoded = decodeURIComponent(p.slice(2));
+          window.history.replaceState(null, null, '/' + decoded);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/ivent/app/assets/index-DF0spM4q.js"></script>
+    <link rel="stylesheet" crossorigin href="/ivent/app/assets/index-evdayPky.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
