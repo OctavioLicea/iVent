@@ -1,8 +1,10 @@
-// pages/LiveBoard.jsx
+// Página: LiveBoard — app/src/pages/LiveBoard.jsx
+// Cambio: el título ya no hereda config.typography.title.color (pensado para fondos claros de la portada) — el LiveBoard siempre tiene fondo oscuro, así que usa un color claro fijo (#EDE0CB) para que nunca se pierda sin importar la paleta del evento
+// 2026-06-19 19:15
+
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
-import { useEventTheme } from '../hooks/useEventTheme'
 
 const SPEED      = 0.6
 const LOAD_LIMIT = 300
@@ -20,9 +22,10 @@ function rndRot(ci) {
 export default function LiveBoard() {
   const { eventId } = useParams()
   const navigate    = useNavigate()
-  const { event: themeEvent } = useEventTheme(eventId)
 
   const [eventTitle, setEventTitle] = useState("")
+  const [titleFont, setTitleFont]   = useState("Great Vibes")
+  const [titleColor, setTitleColor] = useState("#EDE0CB")
   const [count, setCount]           = useState(0)
   const [autoScroll, setAutoScroll] = useState(true)
   const [selected, setSelected]     = useState(new Map())
@@ -52,12 +55,25 @@ export default function LiveBoard() {
     }
   }, [])
 
-  // Cargar título del evento
+  // Cargar título + tipografía del evento
   useEffect(() => {
     async function loadEvent() {
       const { data } = await supabase
-        .from("events").select("title").eq("id", eventId).single()
-      if (data) setEventTitle(data.title || "Collage en vivo")
+        .from("events").select("title, config").eq("id", eventId).single()
+      if (data) {
+        setEventTitle(data.title || "Collage en vivo")
+        const typo = data.config?.typography?.title
+        if (typo?.font) setTitleFont(typo.font)
+        // NOTA: el color del título NO se hereda del config — config.typography.title.color
+        // está pensado para fondos claros (la portada). El LiveBoard siempre tiene fondo
+        // oscuro por diseño, así que el título usa siempre el color claro fijo (titleColor state).
+        // cargar google font dinámicamente
+        const font = typo?.font || "Great Vibes"
+        const id = 'lb-gfont'
+        let link = document.getElementById(id)
+        if (!link) { link = document.createElement('link'); link.id = id; link.rel = 'stylesheet'; document.head.appendChild(link) }
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;700&display=swap`
+      }
     }
     loadEvent()
   }, [eventId])
@@ -221,8 +237,12 @@ export default function LiveBoard() {
     setSelected(new Map())
   }
 
+  // URL de la portada — mismo destino que usa el QR de EventFrontPage
+  const frontPageUrl = `${window.location.origin}/e/${eventId}`
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(frontPageUrl)}`
+
   return (
-    <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#1a110d", position: "relative" }}>
+    <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "linear-gradient(160deg,#0a0a0f 0%,#0f0d14 50%,#0a0c10 100%)", position: "relative" }}>
 
       {/* Wrap con scroll */}
       <div
@@ -236,7 +256,13 @@ export default function LiveBoard() {
           background: "linear-gradient(to bottom,rgba(26,17,13,0.92) 40%,transparent)",
           pointerEvents: "none",
         }}>
-          <div style={{ fontFamily: "Great Vibes,cursive", fontSize: 56, color: "#EDE0CB", lineHeight: 1, textShadow: "0 2px 20px rgba(0,0,0,.4)" }}>
+          <div style={{
+            fontFamily: `'${titleFont}',cursive,serif`,
+            fontSize: 56,
+            color: titleColor,
+            lineHeight: 1,
+            textShadow: "0 2px 12px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.8)",
+          }}>
             {eventTitle}
           </div>
         </div>
@@ -317,6 +343,34 @@ export default function LiveBoard() {
         Auto
       </div>
 
+      {/* QR flotante — lleva a la portada del evento (mismo patrón de generación que EventFrontPage) */}
+      <a
+        href={frontPageUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: "fixed", bottom: 20, right: 16, zIndex: 20,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          background: "rgba(26,17,13,.85)", padding: "10px 10px 8px",
+          borderRadius: 14, border: "0.5px solid rgba(237,224,203,.2)",
+          textDecoration: "none", boxShadow: "0 4px 16px rgba(0,0,0,.4)",
+        }}
+      >
+        <div style={{
+          width: 76, height: 76, borderRadius: 8, background: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 5, overflow: "hidden",
+        }}>
+          <img src={qrSrc} alt="QR de la portada" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
+        <span style={{
+          fontFamily: "DM Sans,sans-serif", fontSize: 10, color: "rgba(237,224,203,.85)",
+          letterSpacing: ".02em", whiteSpace: "nowrap",
+        }}>
+          Sube tu foto
+        </span>
+      </a>
+
       {/* Barra de descarga */}
       {selected.size > 0 && (
         <div style={{
@@ -343,7 +397,7 @@ export default function LiveBoard() {
       {/* Loading overlay */}
       {loading && (
         <div style={{
-          position: "fixed", inset: 0, zIndex: 50, background: "#1a110d",
+          position: "fixed", inset: 0, zIndex: 50, background: "#0a0a0f",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <p style={{ color: "#9C8878", fontFamily: "DM Sans,sans-serif" }}>Cargando collage…</p>

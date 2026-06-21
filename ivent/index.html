@@ -1,0 +1,506 @@
+<!--
+  Página: Landing iVent — eventosytech.com/ivent/index.html
+  Motivo: Reconstrucción del handoff de Claude Design (formato x-dc propietario) a HTML/CSS estándar.
+          Sección de precios removida (pendiente confirmar), CTA principal apunta a WhatsApp,
+          agregado responsive completo para mobile.
+  Timestamp: 2026-06-21 09:14 (Monterrey, CDT UTC-6)
+-->
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iVent — Fotos en vivo e invitaciones digitales para tu evento</title>
+<meta name="description" content="Tus invitados escanean un QR, suben sus fotos desde el celular y aparecen al instante en el liveboard proyectado en el salón. Sin descargar ninguna app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1B2D;
+    --navy-deep:#06111D;
+    --navy-mid:#14304D;
+    --gold:#C9A84C;
+    --gold-light:#E3C97A;
+    --gold-brighter:#F4E2A6;
+    --gold-muted:#9A8A5A;
+    --ivory:#F6F1E7;
+    --ivory-hover:#ECE4D3;
+    --card-border:#E7E0D2;
+    --body-light:#6A6354;
+    --body-light-2:#3A4452;
+    --live-red:#FF5A5A;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Manrope',sans-serif;background:#fff;overflow-x:hidden}
+  img,video{max-width:100%;display:block}
+  a{text-decoration:none}
+
+  .wrap{max-width:1180px;margin:0 auto;padding-left:60px;padding-right:60px}
+
+  /* ---------- Animations ---------- */
+  @keyframes hvDot{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+  @keyframes hvGlow{0%,100%{opacity:.4}50%{opacity:.8}}
+  @keyframes hvFloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-12px) rotate(-5deg)}}
+  @keyframes hvFloat2{0%,100%{transform:translateY(0) rotate(4deg)}50%{transform:translateY(-9px) rotate(4deg)}}
+  @keyframes hvFloat3{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-7px) rotate(-2deg)}}
+  @keyframes hvFloat4{0%,100%{transform:translateY(0) rotate(6deg)}50%{transform:translateY(-10px) rotate(6deg)}}
+  @keyframes hvTwinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+  @keyframes hvDrift{0%{transform:translate(0,0)}50%{transform:translate(10px,-26px)}100%{transform:translate(0,0)}}
+
+  /* ---------- Nav ---------- */
+  .nav{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:24px 60px}
+  .nav-logo img{height:26px;width:auto}
+  .nav-links{display:flex;align-items:center;gap:30px}
+  .nav-link{color:rgba(255,255,255,.72);font-size:14px;font-weight:500;transition:color .2s}
+  .nav-link:hover{color:#fff}
+  .nav-cta{color:var(--navy);background:var(--gold);font-size:13.5px;font-weight:700;padding:11px 22px;border-radius:999px;transition:transform .2s,box-shadow .2s;white-space:nowrap}
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(201,168,76,.4)}
+  .nav-burger{display:none;background:none;border:none;cursor:pointer;padding:6px;z-index:20}
+  .nav-burger span{display:block;width:24px;height:2px;background:#fff;margin:5px 0;border-radius:2px}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;overflow:hidden;min-height:100vh;background:radial-gradient(120% 90% at 82% 4%, var(--navy-mid) 0%, var(--navy) 48%, var(--navy-deep) 100%)}
+  .sparkles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .sparkle-dot{position:absolute;border-radius:50%}
+
+  .hero-grid{position:relative;z-index:3;display:grid;grid-template-columns:.92fr 1.12fr;gap:48px;align-items:center;padding:10px 60px 80px;max-width:1560px;margin:0 auto}
+
+  .eyebrow-pill{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(201,168,76,.45);border-radius:999px;padding:7px 15px;margin-bottom:24px}
+  .eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block;animation:hvDot 1.4s ease-in-out infinite}
+  .eyebrow-text{color:var(--gold-light);font-size:12px;letter-spacing:.1em;font-weight:600;text-transform:uppercase}
+
+  .hero h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(36px,4.2vw,62px);line-height:1.05;color:#fff;margin-bottom:20px;letter-spacing:-.01em}
+  .hero h1 em{color:var(--gold);font-style:italic}
+  .hero-lead{font-size:17px;line-height:1.55;color:rgba(255,255,255,.7);max-width:430px;margin-bottom:26px}
+
+  .legend{display:flex;gap:22px;margin-bottom:30px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:10px}
+  .legend-icon{width:30px;height:30px;border-radius:8px;background:rgba(201,168,76,.16);border:1px solid rgba(201,168,76,.4);display:inline-flex;align-items:center;justify-content:center;color:var(--gold-light);font-size:14px;flex:none}
+  .legend-text{color:rgba(255,255,255,.82);font-size:13.5px;font-weight:600;line-height:1.3}
+
+  .hero-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .btn-primary{color:var(--navy);background:var(--gold);font-size:16px;font-weight:700;padding:16px 30px;border-radius:999px;box-shadow:0 10px 24px rgba(201,168,76,.3);transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:10px}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(201,168,76,.45)}
+  .btn-ghost{color:#fff;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:10px;transition:color .2s}
+  .btn-ghost:hover{color:var(--gold-light)}
+  .btn-ghost-circle{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.35);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+
+  /* device composition */
+  .device{position:relative;padding:10px 24px 60px 0}
+  .device-glow{position:absolute;inset:0 0 30px;background:radial-gradient(58% 50% at 56% 40%,rgba(201,168,76,.22),transparent 70%);animation:hvGlow 4s ease-in-out infinite}
+
+  .tv{position:relative;width:90%;margin-left:auto;background:#0a0a0b;border-radius:14px;padding:11px;box-shadow:0 40px 90px rgba(0,0,0,.55)}
+  .tv-inner{position:relative;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:#0a1626}
+  .tv-inner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .tv-chrome{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:11px 14px 0;pointer-events:none}
+  .tv-label{color:rgba(255,255,255,.7);font-size:10px;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+  .tv-live{display:inline-flex;align-items:center;gap:5px;color:#fff;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.18);padding:4px 9px;border-radius:999px;font-size:10px;font-weight:700}
+  .tv-live-dot{width:6px;height:6px;border-radius:50%;background:var(--live-red);animation:hvDot 1.2s infinite}
+
+  .phone{position:absolute;left:-6px;bottom:-26px;z-index:6;width:112px;background:#0a0a0b;border-radius:20px;padding:4px;box-shadow:0 28px 60px rgba(0,0,0,.6);animation:hvFloat3 7s ease-in-out infinite}
+  .phone img{border-radius:17px}
+  .phone-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:9px;font-weight:800;letter-spacing:.04em;padding:4px 10px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+
+  .chip{position:absolute;background:#fff;border-radius:10px;padding:6px 6px 8px;box-shadow:0 24px 54px rgba(0,0,0,.5)}
+  .chip-1{left:-26px;top:-34px;z-index:5;width:124px;animation:hvFloat 6.5s ease-in-out infinite}
+  .chip-2{right:-22px;bottom:34px;z-index:5;width:108px;animation:hvFloat2 7.4s ease-in-out infinite}
+  .chip-3{left:42%;bottom:-30px;z-index:5;width:118px;animation:hvFloat4 8s ease-in-out infinite}
+  .chip-media{position:relative;border-radius:6px;overflow:hidden;background:#13243a}
+  .chip-1 .chip-media,.chip-3 .chip-media{aspect-ratio:1/1}
+  .chip-2 .chip-media{aspect-ratio:4/5}
+  .chip-media img{width:100%;height:100%;object-fit:cover}
+  .chip-live{position:absolute;left:6px;top:6px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);border-radius:999px;padding:3px 7px 3px 5px}
+  .chip-live-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;animation:hvDot 1.2s infinite}
+  .chip-live span.label{color:#fff;font-size:8px;font-weight:700;letter-spacing:.06em}
+  .chip-caption{padding:6px 3px 0;font-size:10.5px;font-weight:700;color:var(--navy)}
+
+  /* ---------- Section generic ---------- */
+  .section{padding:88px 60px}
+  .section-ivory{background:var(--ivory)}
+  .section-white{background:#fff}
+  .section-head{text-align:center;margin-bottom:56px}
+  .section-eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-muted);font-weight:700;margin-bottom:16px}
+  .section-eyebrow.on-dark{color:var(--gold-light)}
+  .section-h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(32px,4vw,54px);line-height:1.05;color:var(--navy);margin-bottom:14px;letter-spacing:-.01em}
+  .section-h2.on-dark{color:#fff}
+  .section-h2 em{color:var(--gold);font-style:italic}
+  .section-lead{font-size:17px;line-height:1.55;color:var(--body-light);max-width:520px;margin:0 auto}
+  .section-lead.on-dark{color:rgba(255,255,255,.7)}
+
+  /* Cómo funciona */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .step-card{background:#fff;border-radius:16px;padding:34px 28px;box-shadow:0 12px 40px rgba(11,27,45,.07)}
+  .step-num{width:46px;height:46px;border-radius:50%;background:var(--navy);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+  .step-num.inverted{background:var(--gold);color:var(--navy)}
+  .step-card h3{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:10px}
+  .step-card p{font-size:15px;line-height:1.6;color:var(--body-light)}
+
+  /* Liveboard */
+  .liveboard-section{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 20% 10%, var(--navy-mid) 0%, var(--navy) 50%, var(--navy-deep) 100%)}
+  .two-col{display:grid;grid-template-columns:1fr 1.15fr;gap:56px;align-items:center}
+  .two-col.reverse{grid-template-columns:.95fr 1.05fr}
+  .check-list{display:flex;flex-direction:column;gap:15px;margin-bottom:32px}
+  .check-row{display:flex;align-items:center;gap:13px;font-size:15px}
+  .check-row.on-dark{color:rgba(255,255,255,.85)}
+  .check-row.on-light{color:var(--body-light-2)}
+  .check-circle{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+  .check-circle.on-dark{background:rgba(201,168,76,.2);color:var(--gold-light)}
+  .check-circle.on-light{background:rgba(201,168,76,.18);color:var(--gold-muted)}
+  .btn-pill-gold{color:var(--navy);background:var(--gold);font-size:15px;font-weight:700;padding:14px 28px;border-radius:999px;display:inline-block;transition:transform .2s,box-shadow .2s}
+  .btn-pill-gold:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(201,168,76,.4)}
+  .btn-pill-navy{color:#fff;background:var(--navy);font-size:15px;font-weight:700;padding:14px 28px;border-radius:999px;display:inline-block;transition:transform .2s,box-shadow .2s}
+  .btn-pill-navy:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,27,45,.25)}
+
+  /* Invitación sample */
+  .invite-card{background:var(--navy);border-radius:10px;padding:14px}
+  .invite-inner{border:1px solid rgba(201,168,76,.4);border-radius:6px;padding:48px 30px;text-align:center}
+  .invite-eyebrow{color:var(--gold);font-size:12px;letter-spacing:.32em;text-transform:uppercase;margin-bottom:14px}
+  .invite-names{font-family:'Great Vibes',cursive;font-size:clamp(36px,6vw,58px);color:#fff;margin-bottom:18px}
+  .invite-divider{width:60px;height:1px;background:var(--gold);margin:0 auto 18px}
+  .invite-date{font-family:'Cormorant Garamond',serif;font-size:21px;color:#fff;margin-bottom:6px}
+  .invite-venue{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.04em}
+  .invite-rsvp{margin-top:34px;display:inline-block;background:var(--gold);color:var(--navy);font-size:12px;font-weight:700;padding:10px 22px;border-radius:999px}
+
+  /* CTA final */
+  .cta-final{position:relative;overflow:hidden;background:radial-gradient(120% 120% at 50% 0%, var(--navy-mid) 0%, var(--navy) 55%, var(--navy-deep) 100%);padding:96px 60px;text-align:center}
+  .cta-final-inner{max-width:680px;margin:0 auto}
+  .cta-final h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(32px,4.6vw,64px);line-height:1.05;color:#fff;margin-bottom:18px;letter-spacing:-.01em}
+  .cta-final h2 em{color:var(--gold);font-style:italic}
+  .cta-final p{font-size:17px;line-height:1.6;color:rgba(255,255,255,.7);margin-bottom:32px}
+  .btn-whatsapp{color:var(--navy);background:var(--gold);font-size:17px;font-weight:700;padding:18px 38px;border-radius:999px;box-shadow:0 14px 32px rgba(201,168,76,.32);display:inline-flex;align-items:center;gap:10px;transition:transform .2s,box-shadow .2s}
+  .btn-whatsapp:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(201,168,76,.5)}
+
+  /* Footer */
+  footer{background:var(--navy-deep);padding:48px 60px 36px}
+  .footer-top{max-width:1140px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:36px}
+  .footer-brand{max-width:300px}
+  .footer-brand img{height:24px;margin-bottom:14px}
+  .footer-brand p{font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.5)}
+  .footer-cols{display:flex;gap:56px;flex-wrap:wrap}
+  .footer-col{display:flex;flex-direction:column;gap:11px}
+  .footer-col-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:2px}
+  .footer-col a{font-size:14px;color:rgba(255,255,255,.62);transition:color .2s}
+  .footer-col a:hover{color:#fff}
+  .footer-bottom{max-width:1140px;margin:36px auto 0;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .footer-bottom span{font-size:13px;color:rgba(255,255,255,.4)}
+
+  /* Floating WhatsApp button (mobile-friendly persistent CTA) */
+  .wa-float{position:fixed;bottom:22px;right:22px;z-index:50;background:#25D366;color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.35);transition:transform .2s}
+  .wa-float:hover{transform:scale(1.07)}
+  .wa-float svg{width:28px;height:28px}
+
+  /* ===================== RESPONSIVE ===================== */
+  @media (max-width:980px){
+    .wrap{padding-left:32px;padding-right:32px}
+    .nav{padding:20px 24px}
+    .nav-links{position:fixed;top:0;right:0;height:100vh;width:78%;max-width:320px;background:var(--navy-deep);flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px;padding:84px 28px 28px;transform:translateX(100%);transition:transform .3s ease;z-index:15}
+    .nav-links.open{transform:translateX(0)}
+    .nav-link{width:100%;padding:12px 0;font-size:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .nav-cta{width:100%;text-align:center;margin-top:14px}
+    .nav-burger{display:block}
+    .nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10}
+    .nav-overlay.open{display:block}
+
+    .hero-grid{grid-template-columns:1fr;padding:0 24px 200px;gap:56px}
+    .device{padding:10px 0 0;margin-top:8px}
+    .tv{width:100%;margin-left:0}
+    .phone{width:88px;left:-4px;bottom:-20px}
+    .chip-1{left:-12px;top:-26px;width:96px}
+    .chip-2{right:-10px;bottom:24px;width:88px}
+    .chip-3{left:34%;bottom:-22px;width:96px}
+
+    .section{padding:64px 24px}
+    .steps{grid-template-columns:1fr;gap:18px}
+    .two-col,.two-col.reverse{grid-template-columns:1fr;gap:40px}
+    .two-col .invite-card{order:2}
+    .invite-inner{padding:36px 22px}
+
+    .cta-final{padding:72px 24px}
+    footer{padding:40px 24px 28px}
+    .footer-top{gap:32px}
+    .footer-cols{gap:36px;width:100%}
+  }
+
+  @media (max-width:560px){
+    .legend{gap:14px}
+    .hero-actions{flex-direction:column;align-items:flex-start;gap:16px}
+    .btn-primary{width:100%;justify-content:center}
+    .section-lead{font-size:15.5px}
+    .invite-names{font-size:38px}
+    .wa-float{bottom:16px;right:16px;width:52px;height:52px}
+  }
+</style>
+</head>
+<body>
+
+<!-- WhatsApp link (centralized) -->
+<!-- Número: 81 2466 5528 (local MX). wa.me requiere lada país (52) para abrir desde cualquier dispositivo. -->
+
+<!-- ===================== HERO ===================== -->
+<div class="hero" id="top">
+  <div class="sparkles" id="sparkles"></div>
+
+  <div class="nav">
+    <a href="#top" class="nav-logo"><img src="assets/ivent-logo-light.svg" alt="iVent"></a>
+    <button class="nav-burger" id="navBurger" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="#liveboard" class="nav-link">Liveboard</a>
+      <a href="#invitaciones" class="nav-link">Invitaciones</a>
+      <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent%20para%20mi%20evento" target="_blank" rel="noopener" class="nav-cta">Contáctanos</a>
+    </div>
+  </div>
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow-pill">
+        <span class="eyebrow-dot"></span>
+        <span class="eyebrow-text">En vivo en la fiesta</span>
+      </div>
+      <h1>Cada foto de tus invitados, <em>en vivo</em> en la pantalla.</h1>
+      <p class="hero-lead">Tus invitados escanean un QR, suben sus fotos desde el celular y aparecen al instante en el liveboard proyectado en el salón. Sin descargar ninguna app.</p>
+
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-icon">📺</span>
+          <span class="legend-text">En la pantalla<br>del salón</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-icon">📱</span>
+          <span class="legend-text">En el teléfono<br>de cada invitado</span>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent%20para%20mi%20evento" target="_blank" rel="noopener" class="btn-primary">Contáctanos por WhatsApp</a>
+        <a href="#liveboard" class="btn-ghost"><span class="btn-ghost-circle">▶</span> Ver el liveboard</a>
+      </div>
+    </div>
+
+    <div class="device">
+      <div class="device-glow"></div>
+
+      <div class="tv">
+        <div class="tv-inner">
+          <video src="assets/liveboard.mp4" autoplay muted loop playsinline preload="auto"></video>
+          <div class="tv-chrome">
+            <span class="tv-label">Liveboard · en pantalla</span>
+            <span class="tv-live"><span class="tv-live-dot"></span>en vivo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone">
+        <img src="assets/phone-app.jpg" alt="Liveboard en el teléfono del invitado">
+        <div class="phone-badge">VISTA INVITADO</div>
+      </div>
+
+      <div class="chip chip-1">
+        <div class="chip-media">
+          <img src="assets/chip-1.jpg" alt="Ana">
+          <div class="chip-live"><span class="chip-live-dot"></span><span class="label">EN VIVO</span></div>
+        </div>
+        <div class="chip-caption">Ana subió una foto</div>
+      </div>
+
+      <div class="chip chip-2">
+        <div class="chip-media">
+          <img src="assets/chip-2.jpg" alt="Jahir y Paola">
+          <div class="chip-live"><span class="chip-live-dot"></span><span class="label">EN VIVO</span></div>
+        </div>
+        <div class="chip-caption">Jahir &amp; Paola</div>
+      </div>
+
+      <div class="chip chip-3">
+        <div class="chip-media">
+          <img src="assets/chip-3.jpg" alt="Sofía">
+          <div class="chip-live"><span class="chip-live-dot"></span><span class="label">EN VIVO</span></div>
+        </div>
+        <div class="chip-caption">Sofía subió una foto</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CÓMO FUNCIONA ===================== -->
+<div class="section section-ivory" id="como">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">Cómo funciona</div>
+      <h2 class="section-h2">Tres pasos. Cero apps.</h2>
+      <p class="section-lead">Desde que tu invitado ve el QR hasta que su foto está en la pantalla del salón pasan menos de dos segundos.</p>
+    </div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Escanea el QR</h3>
+        <p>Cada mesa tiene un código. El invitado lo escanea con su cámara — sin instalar nada.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Sube tu foto</h3>
+        <p>Toma una selfie o elige de su galería. Una o muchas — sin límite por invitado.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num inverted">3</div>
+        <h3>Aparece en pantalla</h3>
+        <p>La foto entra al instante al liveboard proyectado en el salón, en vivo para todos.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LIVEBOARD ===================== -->
+<div class="section liveboard-section" id="liveboard">
+  <div class="wrap two-col">
+    <div>
+      <div class="section-eyebrow on-dark">El liveboard</div>
+      <h2 class="section-h2 on-dark">El muro de fotos que <em>se llena solo.</em></h2>
+      <p class="section-lead on-dark" style="margin:0 0 30px;max-width:440px;text-align:left">Proyéctalo en cualquier pantalla del salón. Las fotos de tus invitados caen en tiempo real con un mosaico en movimiento que nunca deja de crecer.</p>
+      <div class="check-list">
+        <div class="check-row on-dark"><span class="check-circle on-dark">✓</span> Auto-scroll y rotación automática</div>
+        <div class="check-row on-dark"><span class="check-circle on-dark">✓</span> Moderación opcional antes de proyectar</div>
+        <div class="check-row on-dark"><span class="check-circle on-dark">✓</span> Galería descargable al terminar la fiesta</div>
+      </div>
+      <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20liveboard%20de%20iVent" target="_blank" rel="noopener" class="btn-pill-gold">Contáctanos</a>
+    </div>
+    <div>
+      <div class="tv">
+        <div class="tv-inner">
+          <video src="assets/liveboard.mp4" autoplay muted loop playsinline preload="auto"></video>
+          <div class="tv-chrome">
+            <span class="tv-label">Liveboard · en pantalla</span>
+            <span class="tv-live"><span class="tv-live-dot"></span>en vivo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== INVITACIONES ===================== -->
+<div class="section section-ivory" id="invitaciones">
+  <div class="wrap two-col reverse">
+    <div class="invite-card">
+      <div class="invite-inner">
+        <div class="invite-eyebrow">Nos casamos</div>
+        <div class="invite-names">Ana &amp; Luis</div>
+        <div class="invite-divider"></div>
+        <div class="invite-date">Sábado 14 de Diciembre, 2026</div>
+        <div class="invite-venue">Hacienda San Ángel · 7:00 pm</div>
+        <div class="invite-rsvp">Confirmar asistencia</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-eyebrow">Invitaciones</div>
+      <h2 class="section-h2">Una invitación digital a la altura de tu evento.</h2>
+      <p class="section-lead" style="margin:0 0 30px;max-width:440px;text-align:left;color:var(--body-light)">Diseña tu invitación, mándala por WhatsApp y recibe confirmaciones — todo en el mismo link que después abre el liveboard.</p>
+      <div class="check-list">
+        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Plantillas elegantes, editables a tu estilo</div>
+        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Confirmación de asistencia (RSVP) integrada</div>
+        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Un solo link: invitación, fotos y liveboard</div>
+      </div>
+      <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20invitaciones%20digitales%20de%20iVent" target="_blank" rel="noopener" class="btn-pill-navy">Contáctanos</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CTA FINAL ===================== -->
+<div class="cta-final">
+  <div class="cta-final-inner">
+    <h2>Que tu próxima fiesta <em>se viva dos veces.</em></h2>
+    <p>Una en el salón, otra en la pantalla. Escríbenos y arrancamos tu evento.</p>
+    <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent%20para%20mi%20evento" target="_blank" rel="noopener" class="btn-whatsapp">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.46 1.29 4.91L2 22l5.31-1.39a9.86 9.86 0 0 0 4.73 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.85 14.07c-.25.7-1.45 1.34-2 1.43-.51.08-1.15.11-1.86-.12-.43-.13-.98-.32-1.69-.62-2.97-1.28-4.91-4.27-5.06-4.47-.15-.2-1.21-1.6-1.21-3.06 0-1.45.76-2.17 1.03-2.46.27-.3.6-.37.8-.37.2 0 .4 0 .57.01.18.01.43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.39-.45.52-.15.15-.3.31-.13.61.17.3.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.36 1.46.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.73.82 2.02.97.3.15.5.23.57.35.07.13.07.74-.18 1.44z"/></svg>
+      Contáctanos por WhatsApp
+    </a>
+  </div>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img src="assets/ivent-logo-light.svg" alt="iVent">
+      <p>Fotos en vivo e invitaciones digitales para eventos inolvidables.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <div class="footer-col-title">Producto</div>
+        <a href="#liveboard">Liveboard</a>
+        <a href="#invitaciones">Invitaciones</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contacto</div>
+        <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 iVent. Todos los derechos reservados.</span>
+    <span>Hecho para celebrar.</span>
+  </div>
+</footer>
+
+<!-- Floating WhatsApp button -->
+<a class="wa-float" href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent%20para%20mi%20evento" target="_blank" rel="noopener" aria-label="Contáctanos por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.46 1.29 4.91L2 22l5.31-1.39a9.86 9.86 0 0 0 4.73 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.85 14.07c-.25.7-1.45 1.34-2 1.43-.51.08-1.15.11-1.86-.12-.43-.13-.98-.32-1.69-.62-2.97-1.28-4.91-4.27-5.06-4.47-.15-.2-1.21-1.6-1.21-3.06 0-1.45.76-2.17 1.03-2.46.27-.3.6-.37.8-.37.2 0 .4 0 .57.01.18.01.43-.07.67.51.25.6.85 2.07.92 2.22.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.39-.45.52-.15.15-.3.31-.13.61.17.3.76 1.25 1.63 2.03 1.12 1 2.06 1.31 2.36 1.46.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.67-.15.27.1 1.73.82 2.02.97.3.15.5.23.57.35.07.13.07.74-.18 1.44z"/></svg>
+</a>
+
+<script>
+  // Sparkles (deterministic, seeded — same algorithm as the original handoff)
+  (function(){
+    var container = document.getElementById('sparkles');
+    var rnd = function(s){ var x = Math.sin(s) * 10000; return x - Math.floor(x); };
+    var n = 46;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++){
+      var top = rnd(i * 1.7 + 3) * 100;
+      var left = rnd(i * 2.3 + 7) * 100;
+      var size = 1.5 + rnd(i * 3.1 + 1) * 3.5;
+      var tw = 2.4 + rnd(i * 1.3 + 5) * 3.6;
+      var dr = 7 + rnd(i * 0.9 + 2) * 9;
+      var delay = -rnd(i * 4.2 + 6) * 6;
+      var bright = rnd(i * 5.5 + 4) > .72;
+      var color = bright ? '#F4E2A6' : '#C9A84C';
+
+      var outer = document.createElement('div');
+      outer.style.position = 'absolute';
+      outer.style.top = top + '%';
+      outer.style.left = left + '%';
+      outer.style.animation = 'hvDrift ' + dr + 's ease-in-out ' + delay + 's infinite';
+
+      var dot = document.createElement('div');
+      dot.className = 'sparkle-dot';
+      dot.style.width = size + 'px';
+      dot.style.height = size + 'px';
+      dot.style.background = color;
+      dot.style.boxShadow = '0 0 ' + (size * 2.5) + 'px ' + (size * .8) + 'px ' + color;
+      dot.style.animation = 'hvTwinkle ' + tw + 's ease-in-out ' + delay + 's infinite';
+
+      outer.appendChild(dot);
+      frag.appendChild(outer);
+    }
+    container.appendChild(frag);
+  })();
+
+  // Mobile nav toggle
+  (function(){
+    var burger = document.getElementById('navBurger');
+    var links = document.getElementById('navLinks');
+    var overlay = document.getElementById('navOverlay');
+    function close(){ links.classList.remove('open'); overlay.classList.remove('open'); }
+    function toggle(){ links.classList.toggle('open'); overlay.classList.toggle('open'); }
+    burger.addEventListener('click', toggle);
+    overlay.addEventListener('click', close);
+    links.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', close); });
+  })();
+</script>
+
+</body>
+</html>

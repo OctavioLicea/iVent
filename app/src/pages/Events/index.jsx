@@ -1,9 +1,10 @@
 // Página: Events — app/src/pages/Events/index.jsx
-// Cambio: agregar thumbnail (flyer_url / bg_url) a cada card de evento
-// 2026-06-12 20:10
+// Cambio: "Ver portada" ahora abre en pestaña nueva (window.open) en vez de navegar en la misma ventana — la portada no tiene navegación propia, así que perder la pestaña de "Mis eventos" obligaba a usar el botón back del navegador
+// 2026-06-19 20:40
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import iventLogo from '../../assets/ivent-logo-light.svg'
 
 const C = {
   navy:      '#0F1E35',
@@ -43,6 +44,7 @@ export default function Events() {
   const [loading, setLoading] = useState(true)
   const [user,    setUser]    = useState(null)
   const [creating, setCreating] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Events() {
   async function loadEvents() {
     const { data, error } = await supabase
       .from('events')
-      .select('id, name, title, start_date, venue, flyer_url, bg_url')
+      .select('id, name, title, start_date, venue, flyer_url, bg_url, archived')
       .order('start_date', { ascending: true })
     if (!error && data) setEvents(data)
     setLoading(false)
@@ -81,10 +83,18 @@ export default function Events() {
     navigate(`/event-designer/${data.id}`)
   }
 
+  async function toggleArchived(eventId, current) {
+    const { error } = await supabase.from('events').update({ archived: !current }).eq('id', eventId)
+    if (!error) setEvents(prev => prev.map(e => e.id === eventId ? { ...e, archived: !current } : e))
+  }
+
   function getInitials(email) {
     if (!email) return '?'
     return email.slice(0, 2).toUpperCase()
   }
+
+  const archivedCount = events.filter(e => e.archived).length
+  const visibleEvents = showArchived ? events : events.filter(e => !e.archived)
 
   return (
     <>
@@ -171,9 +181,9 @@ export default function Events() {
       }}>
         {/* Logo */}
         <img
-          src="/ivent_logo_transp.png"
+          src={iventLogo}
           alt="iVent"
-          style={{ height:28, filter:'invert(1) brightness(10)', mixBlendMode:'screen', cursor:'pointer' }}
+          style={{ height:28, cursor:'pointer' }}
           onClick={() => navigate('/events')}
         />
 
@@ -215,7 +225,12 @@ export default function Events() {
             </h1>
             {!loading && (
               <p style={{ fontSize:12, color:C.inkMute, marginTop:4 }}>
-                {events.length} evento{events.length !== 1 ? 's' : ''} creado{events.length !== 1 ? 's' : ''}
+                {visibleEvents.length} evento{visibleEvents.length !== 1 ? 's' : ''}
+                {archivedCount > 0 && (
+                  <button onClick={() => setShowArchived(s => !s)} style={{ marginLeft:10, fontSize:11, color:C.goldDark, background:'none', border:'none', cursor:'pointer', fontFamily:"'DM Sans',sans-serif", textDecoration:'underline' }}>
+                    {showArchived ? 'Ver activos' : `Ver todos (incl. ${archivedCount} ocultos)`}
+                  </button>
+                )}
               </p>
             )}
           </div>
@@ -227,20 +242,25 @@ export default function Events() {
         {/* Lista */}
         {loading ? (
           <p style={{ fontSize:13, color:C.inkMute, textAlign:'center', padding:'40px 0' }}>Cargando…</p>
-        ) : events.length === 0 ? (
+        ) : visibleEvents.length === 0 ? (
           <div style={{ textAlign:'center', padding:'60px 0' }}>
             <p style={{ fontSize:32, marginBottom:12 }}>🎉</p>
-            <p style={{ fontFamily:"'Tenor Sans',sans-serif", fontSize:18, color:C.navy, marginBottom:8 }}>No tienes eventos aún</p>
-            <p style={{ fontSize:13, color:C.inkMute }}>Crea tu primer evento con el botón de arriba.</p>
+            <p style={{ fontFamily:"'Tenor Sans',sans-serif", fontSize:18, color:C.navy, marginBottom:8 }}>
+              {events.length === 0 ? 'No tienes eventos aún' : 'No tienes eventos activos'}
+            </p>
+            <p style={{ fontSize:13, color:C.inkMute }}>
+              {events.length === 0 ? 'Crea tu primer evento con el botón de arriba.' : 'Todos tus eventos están ocultos.'}
+            </p>
           </div>
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {events.map(event => {
+            {visibleEvents.map(event => {
               const st = statusLabel(event)
               return (
                 <div
                   key={event.id}
                   className="event-card"
+                  style={{ opacity: event.archived ? 0.5 : 1 }}
                   onClick={() => navigate(`/event-designer/${event.id}`)}
                 >
                   <div className="event-thumb" style={{
@@ -263,7 +283,7 @@ export default function Events() {
                     </span>
                     <button
                       className="card-action-btn"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/e/${event.id}`) }}
+                      onClick={(e) => { e.stopPropagation(); window.open(`/ivent/app/e/${event.id}`, '_blank', 'noopener,noreferrer') }}
                     >
                       Ver portada
                     </button>
@@ -272,6 +292,12 @@ export default function Events() {
                       onClick={(e) => { e.stopPropagation(); navigate(`/event-designer/${event.id}`) }}
                     >
                       Editar evento
+                    </button>
+                    <button
+                      className="card-action-btn"
+                      onClick={(e) => { e.stopPropagation(); toggleArchived(event.id, event.archived) }}
+                    >
+                      {event.archived ? 'Mostrar' : 'Ocultar'}
                     </button>
                     <span style={{ color:C.inkMute, fontSize:18, lineHeight:1 }}>›</span>
                   </div>

@@ -1,6 +1,6 @@
 // Página: EventDesigner — app/src/pages/EventDesigner/index.jsx
-// Cambio: usar el SVG real del logo iVent (versión light) en el topnav
-// 2026-06-12 19:20
+// Cambio: fix link hardcodeado "Ver portada" — apuntaba a /iVent/e/ (estructura vieja), corregido a /ivent/app/e/ (estructura nueva con landing en /ivent y app en /ivent/app)
+// 2026-06-19 19:50
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import iventLogo from '../../assets/ivent-logo-light.svg'
@@ -244,7 +244,7 @@ export default function EventDesigner() {
       setLoading(false)
     }
     load()
-  }, [eventId, navigate])
+  }, [eventId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── IMAGE UPLOAD ──
   async function handleImgUpload(e, type) {
@@ -259,7 +259,8 @@ export default function EventDesigner() {
     const { error: upErr } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true })
     if (upErr) { console.error('Storage upload error', upErr); return }
     const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path)
-    const publicUrl = data.publicUrl
+    // Cache-buster: mismo path siempre (upsert), evita que el navegador sirva la versión vieja cacheada
+    const publicUrl = `${data.publicUrl}?t=${Date.now()}`
     const col = type === 'logo' ? 'logo_url' : 'flyer_url'
     setImages(prev => ({ ...prev, [field]: publicUrl }))
     await supabase.from('events').update({ [col]: publicUrl }).eq('id', eventId)
@@ -277,8 +278,11 @@ export default function EventDesigner() {
     const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true })
     if (error) { console.error('BG upload error', error); return }
     const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path)
-    setImages(prev => ({ ...prev, bg: data.publicUrl }))
-    await supabase.from('events').update({ bg_url: data.publicUrl }).eq('id', eventId)
+    // Cache-buster: el path es siempre el mismo (upsert), así que el navegador
+    // puede servir la versión cacheada de la URL vieja si no la forzamos a refrescar.
+    const freshUrl = `${data.publicUrl}?t=${Date.now()}`
+    setImages(prev => ({ ...prev, bg: freshUrl }))
+    await supabase.from('events').update({ bg_url: freshUrl }).eq('id', eventId)
   }
 
   // ── SAVE ──
@@ -377,7 +381,7 @@ export default function EventDesigner() {
         <button className="ed-btn-save" onClick={handleSave} disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
-        <a className="ed-btn-frontpage" href={`/e/${eventId}`} target="_blank" rel="noreferrer">
+        <a className="ed-btn-frontpage" href={`/ivent/app/e/${eventId}`} target="_blank" rel="noreferrer">
           ⛶ Ver portada
         </a>
         <div className="ed-user-chip">
