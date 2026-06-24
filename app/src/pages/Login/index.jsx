@@ -1,30 +1,15 @@
 // Página: Login — app/src/pages/Login/index.jsx
-// Cambio: panel de marca con sparkles, naipes de invitaciones, labels de eventos eliminados
-// 2026-06-22 23:15
+// Cambio: Capa 3 — importar BRAND de constants; eliminar const C local y @import duplicado
+// 2026-06-23 21:05
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { BRAND as C } from '../../lib/constants'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import inviteBoda from '../../assets/invite-boda.png'
 import inviteGraduacion from '../../assets/invite-graduacion.png'
 
-const C = {
-  navy:        '#0F1E35',
-  navyMid:     '#1E3352',
-  navyDeep:    '#06111D',
-  gold:        '#C9A84C',
-  goldDark:    '#A8832A',
-  goldLight:   'rgba(201,168,76,0.12)',
-  inkMid:      '#4A4540',
-  inkMute:     '#8A837A',
-  border:      'rgba(15,30,53,0.12)',
-  surfaceInput:'#F7F8FA',
-  red:         '#C0392B',
-  redLight:    '#FDF0EF',
-  green:       '#2D7A4F',
-  greenLight:  '#EEF7F2',
-}
 
 function Sparkles() {
   const canvasRef = useRef(null)
@@ -127,7 +112,6 @@ export default function Login() {
         @keyframes spTwinkle { 0%,100%{opacity:.15;transform:scale(.7)} 50%{opacity:1;transform:scale(1)} }
         @keyframes spDrift   { 0%{transform:translate(0,0)} 50%{transform:translate(10px,-26px)} 100%{transform:translate(0,0)} }
 
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Tenor+Sans&family=DM+Sans:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         html, body, #root { height:100%; }
         body { font-family:'DM Sans',sans-serif; }

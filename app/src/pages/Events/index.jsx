@@ -1,27 +1,12 @@
 // Página: Events — app/src/pages/Events/index.jsx
-// Cambio: HC-01 — "Ver portada" usaba /ivent/app/e/ hardcodeado; ahora usa appEventPath() de constants
-// 2026-06-23 21:00
+// Cambio: Capa 3 — importar BRAND de constants, formatDate de eventHelpers; eliminar const C local y @import duplicado
+// 2026-06-23 21:05
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
-import { appEventPath } from '../../lib/constants'
+import { appEventPath, BRAND as C } from '../../lib/constants'
 import { formatDate } from '../../lib/eventHelpers'
-
-const C = {
-  navy:      '#0F1E35',
-  navyMid:   '#1E3352',
-  gold:      '#C9A84C',
-  goldDark:  '#A8832A',
-  goldLight: 'rgba(201,168,76,0.12)',
-  ink:       '#1A1714',
-  inkMute:   '#8A837A',
-  border:    'rgba(15,30,53,0.10)',
-  surface:   '#fff',
-  bg:        '#F4F5F7',
-  green:     '#2D7A4F',
-  greenBg:   '#EEF7F2',
-}
 
 function statusLabel(event) {
   // Por ahora derivamos el status de la fecha
@@ -96,7 +81,6 @@ export default function Events() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=DM+Sans:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         html, body, #root { height:100%; }
         body { font-family:'DM Sans',sans-serif; background:${C.bg}; color:${C.ink}; }
