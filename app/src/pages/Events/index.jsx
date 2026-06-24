@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { appEventPath } from '../../lib/constants'
+import { formatDate } from '../../lib/eventHelpers'
 
 const C = {
   navy:      '#0F1E35',
@@ -34,11 +35,6 @@ function statusLabel(event) {
   return              { label: 'Borrador',    bg: C.bg,         color: C.inkMute }
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
-}
 
 export default function Events() {
   const [events,  setEvents]  = useState([])

@@ -1,65 +1,20 @@
 // Página: EventDesigner — app/src/pages/EventDesigner/index.jsx
-// Cambio: HC-02 + HC-04 — "Ver portada" y QR del preview usaban /ivent/app/e/ hardcodeado; ahora usan appEventPath() y appEventUrl() de constants
-// 2026-06-23 21:00
+// Cambio: Capa 2 — eliminar código duplicado; importar desde eventHelpers
+// 2026-06-23 22:00
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { supabase } from '../../lib/supabase'
 import { appEventPath, appEventUrl } from '../../lib/constants'
+import {
+  PALETTES, DEFAULT_TYPOGRAPHY, DEFAULT_FRAMES, DETECT_PALETTE,
+  MODULE_DEFS, FONT_OPTIONS, TYPO_ROLES, BG_PATTERNS,
+  formatDate, formatTime, darken, lighten, customPaletteToColors, defaultTypoColor,
+} from '../../lib/eventHelpers'
 import './styles.css'
 
 const STORAGE_BUCKET = 'event-assets'
 
-const PALETTES = {
-  boda:     { label: 'Romance',     primary: '#7D2935', primaryDark: '#561820', primaryMid: '#A34455', primaryLight: '#F3E8EA', accent: '#9C6B2E', accentLight: '#F7F0E3', surface: '#FAF7F2', surface2: '#F2EBE0', kraft: '#EDE0CB', ink: '#2A1F1A', inkMute: '#9C8878', sageLight: '#EBF0E8' },
-  quince:   { label: 'Lila & Rosa', primary: '#7B3FA0', primaryDark: '#5B2D8E', primaryMid: '#9B60C0', primaryLight: '#F5EAF8', accent: '#C97DC0', accentLight: '#FBF0FA', surface: '#FDF8FF', surface2: '#F5ECF8', kraft: '#EFE0F0', ink: '#2A1A2E', inkMute: '#9A7AA0', sageLight: '#F0EAF5' },
-  marino:   { label: 'Marino & Oro', primary: '#2A4A7F', primaryDark: '#1B2C4E', primaryMid: '#3D6399', primaryLight: '#EAF0FA', accent: '#C4973A', accentLight: '#FBF5E6', surface: '#F8FAFF', surface2: '#EFF2F8', kraft: '#E8EBF2', ink: '#1A1F2E', inkMute: '#7A8AA0', sageLight: '#E8EFF8' },
-  botanico: { label: 'Jardín',       primary: '#3D6B20', primaryDark: '#2D5016', primaryMid: '#5A8A35', primaryLight: '#EDF5E8', accent: '#7A9E52', accentLight: '#F2F8EC', surface: '#F8FCF5', surface2: '#EFF5EA', kraft: '#E4EDD8', ink: '#1A2010', inkMute: '#7A8A6A', sageLight: '#E8F0DE' },
-}
-
-const FONT_OPTIONS = ['Great Vibes', 'Cormorant Garamond', 'Playfair Display', 'Dancing Script', 'Cinzel', 'Josefin Sans', 'Lora', 'Satisfy', 'Italiana', 'EB Garamond', 'Raleway', 'Montserrat', 'Spectral', 'Philosopher', 'Pinyon Script', 'DM Sans']
-
-const TYPO_ROLES = [
-  { key: 'title',   label: 'Título',  sample: 'Faith & Henry' },
-  { key: 'display', label: 'Display', sample: 'Ceremonia 2026' },
-  { key: 'caption', label: 'Caption', sample: 'Mié 1 · Julio' },
-  { key: 'label',   label: 'Label',   sample: 'Sube tus fotos' },
-]
-
-const DEFAULT_TYPOGRAPHY = {
-  title:   { font: 'Great Vibes', size: 52, bold: false, color: '' },
-  display: { font: 'Cormorant Garamond', size: 17, bold: true, color: '' },
-  caption: { font: 'DM Sans', size: 10, bold: false, color: '' },
-  label:   { font: 'Cormorant Garamond', size: 12, bold: true, color: '' },
-}
-
-const MODULE_DEFS = [
-  { key: 'fotos',   icon: '📷', name: 'Fotos en vivo',   defaultLabel: 'Sube tus fotos',     sub: 'Comparte el momento' },
-  { key: 'collage', icon: '🖼', name: 'Collage en vivo', defaultLabel: 'Collage en vivo',     sub: 'Fotos en tiempo real' },
-  { key: 'crono',   icon: '🕐', name: 'Cronograma',      defaultLabel: 'Cronograma',          sub: 'Timeline del día' },
-  { key: 'deseos',  icon: '💌', name: 'Mensajes',        defaultLabel: '¡Escríbenos algo!',   sub: 'Tus palabras para ellos' },
-  { key: 'mesas',   icon: '🪑', name: 'Mesas',           defaultLabel: '¿Cuál es mi mesa?',   sub: 'Encuentra tu lugar' },
-]
-
-const DEFAULT_FRAMES = {
-  inv: { color: '#EDE0CB', on: true },
-  nav: { color: '#FAF7F2', on: true },
-  qr:  { color: '#F2EBE0', on: true },
-  maps_a: { color: '#1B2C4E' },
-  maps_b: { color: '#C4973A' },
-  maps_on: true,
-}
-
-const BG_PATTERNS = [
-  { id: 'none',      label: 'Limpio',     style: { background: '#FAF7F2' } },
-  { id: 'lino',      label: 'Lino',       style: { backgroundColor: '#EDE8DF', backgroundImage: 'repeating-linear-gradient(0deg,rgba(0,0,0,.03) 0px,rgba(0,0,0,.03) 1px,transparent 1px,transparent 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.02) 0px,rgba(0,0,0,.02) 1px,transparent 1px,transparent 4px)' } },
-  { id: 'marmol',    label: 'Mármol',     style: { backgroundColor: '#F4F2F0', backgroundImage: 'repeating-linear-gradient(125deg,rgba(180,170,160,.12) 0px,transparent 2px,transparent 8px,rgba(180,170,160,.08) 10px)' } },
-  { id: 'acuarela',  label: 'Acuarela',   style: { background: 'radial-gradient(ellipse at 20% 20%,rgba(196,151,58,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(125,41,53,.06) 0%,transparent 60%),#FAF7F2' } },
-  { id: 'cuadricula',label: 'Cuadrícula', style: { backgroundColor: '#F8F6F2', backgroundImage: 'linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px)', backgroundSize: '24px 24px' } },
-  { id: 'puntos',    label: 'Puntos',     style: { backgroundColor: '#FAF7F2', backgroundImage: 'radial-gradient(circle,rgba(0,0,0,.08) 1px,transparent 1px)', backgroundSize: '18px 18px' } },
-  { id: 'kraft',     label: 'Kraft',      style: { backgroundColor: '#E8D9BE' } },
-  { id: 'noche',     label: 'Noche',      style: { background: 'linear-gradient(160deg,#1a1530 0%,#0e1020 100%)' } },
-]
 
 const SECTIONS = [
   { key: 'identidad', label: 'Identidad', icon: '📋', group: 'Evento' },
@@ -69,51 +24,6 @@ const SECTIONS = [
   { key: 'modulos',   label: 'Módulos',   icon: '⚙️', group: 'Configuración' },
   { key: 'frames',    label: 'Frames',    icon: '◻',  group: 'Configuración' },
 ]
-
-const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-
-function formatDate(s) {
-  if (!s) return ''
-  const [y, m, d] = s.split('-').map(Number)
-  const dt = new Date(y, m - 1, d)
-  return `${DIAS[dt.getDay()]} ${d} · ${MESES[m - 1]} · ${y}`
-}
-function formatTime(s) {
-  if (!s) return ''
-  const [h, mn] = s.split(':').map(Number)
-  const sf = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
-  return `${h12}:${String(mn).padStart(2, '0')} ${sf}`
-}
-
-function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)] }
-function rgbToHex(r,g,b) { return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,Math.round(v))).toString(16).padStart(2,'0')).join('') }
-function darken(h,a) { const [r,g,b]=hexToRgb(h); return rgbToHex(r*(1-a),g*(1-a),b*(1-a)) }
-function lighten(h,a) { const [r,g,b]=hexToRgb(h); return rgbToHex(r+(255-r)*a,g+(255-g)*a,b+(255-b)*a) }
-
-function customPaletteToColors(cp) {
-  const c1 = cp.primary, c2 = cp.accent, c3 = cp.surface, c4 = cp.ink
-  return {
-    primary: c1, primaryDark: darken(c1, 0.2), primaryMid: lighten(c1, 0.15), primaryLight: lighten(c1, 0.85),
-    accent: c2, accentLight: lighten(c2, 0.85),
-    surface: lighten(c3, 0.5), surface2: lighten(c3, 0.2), kraft: c3,
-    ink: c4, inkMute: lighten(c4, 0.45), sageLight: lighten(c3, 0.3),
-  }
-}
-
-const DETECT_PALETTE = {
-  '#7D2935': 'boda', '#561820': 'boda',
-  '#7B3FA0': 'quince', '#5B2D8E': 'quince',
-  '#2A4A7F': 'marino', '#1B2C4E': 'marino',
-  '#3D6B20': 'botanico', '#2D5016': 'botanico',
-}
-
-function defaultTypoColor(role, p) {
-  if (role === 'title') return p.primaryDark
-  if (role === 'display') return p.inkMute
-  return p.ink
-}
 
 export default function EventDesigner() {
   const { eventId } = useParams()
@@ -302,6 +212,7 @@ export default function EventDesigner() {
       venue_url: mapsUrl.trim() || null,
       start_date: date || null,
       start_time: time || null,
+      bg_url: images.bg || null,
       config: {
         palette: finalPalette,
         typography,
@@ -309,6 +220,7 @@ export default function EventDesigner() {
         inv_fit: invFit,
         inv_size: invSize,
         frames,
+        bg_pattern: images.bg ? null : selectedBg,
       },
     }
 
