@@ -1,10 +1,13 @@
 // Página: EventFrontPage — app/src/pages/EventFrontPage.jsx
-// Cambio: el QR de la portada ahora se genera dinámicamente (igual que el del modal compartir), ya no depende de qr_url subido
-// 2026-06-12 17:50
+// Cambio: HC-03 — BASE_URL se construía manualmente con /ivent/app hardcodeado; ahora usa appEventUrl() de constants
+// 2026-06-23 21:00
 
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
+import { appEventUrl } from "../lib/constants"
+
+
 
 const PALETTES = {
   boda:     { primary: '#7D2935', primaryDark: '#561820', primaryMid: '#A34455', primaryLight: '#F3E8EA', accent: '#9C6B2E', accentLight: '#F7F0E3', surface: '#FAF7F2', surface2: '#F2EBE0', kraft: '#EDE0CB', ink: '#2A1F1A', inkMute: '#9C8878', sageLight: '#EBF0E8' },
@@ -113,6 +116,7 @@ function resolveFrames(cfg) {
 
 export default function EventFrontPage() {
   const { eventId } = useParams()
+  const eventUrl = appEventUrl(eventId)
   const navigate = useNavigate()
 
   const [event, setEvent] = useState(null)
@@ -175,7 +179,7 @@ export default function EventFrontPage() {
   }, [event])
 
   function copyLink() {
-    const link = `${window.location.origin}/e/${eventId}`
+    const link = eventUrl
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -317,7 +321,7 @@ export default function EventFrontPage() {
         }}>
           <div style={styles.qrSquare}>
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/e/${eventId}`)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(eventUrl)}`}
               alt="QR del evento"
               style={styles.qrImg}
             />
@@ -338,13 +342,13 @@ export default function EventFrontPage() {
             </p>
             <div style={styles.shareQrBox}>
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(`${window.location.origin}/e/${eventId}`)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(eventUrl)}`}
                 alt="QR del evento"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             </div>
             <div style={styles.shareLinkRow}>
-              <input readOnly value={`${window.location.origin}/e/${eventId}`} style={styles.shareLinkInput} onClick={e => e.target.select()} />
+              <input readOnly value={eventUrl} style={styles.shareLinkInput} onClick={e => e.target.select()} />
               <button onClick={copyLink} style={{ ...styles.shareCopyBtn, background: palette.primaryDark }}>
                 {copied ? '✓ Copiado' : 'Copiar'}
               </button>

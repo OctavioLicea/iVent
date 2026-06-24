@@ -1,10 +1,11 @@
 // Página: Events — app/src/pages/Events/index.jsx
-// Cambio: "Ver portada" ahora abre en pestaña nueva (window.open) en vez de navegar en la misma ventana — la portada no tiene navegación propia, así que perder la pestaña de "Mis eventos" obligaba a usar el botón back del navegador
-// 2026-06-19 20:40
+// Cambio: HC-01 — "Ver portada" usaba /ivent/app/e/ hardcodeado; ahora usa appEventPath() de constants
+// 2026-06-23 21:00
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
+import { appEventPath } from '../../lib/constants'
 
 const C = {
   navy:      '#0F1E35',
@@ -283,7 +284,7 @@ export default function Events() {
                     </span>
                     <button
                       className="card-action-btn"
-                      onClick={(e) => { e.stopPropagation(); window.open(`/ivent/app/e/${event.id}`, '_blank', 'noopener,noreferrer') }}
+                      onClick={(e) => { e.stopPropagation(); window.open(appEventPath(event.id), '_blank', 'noopener,noreferrer') }}
                     >
                       Ver portada
                     </button>

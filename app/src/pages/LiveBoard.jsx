@@ -1,10 +1,11 @@
 // Página: LiveBoard — app/src/pages/LiveBoard.jsx
-// Cambio: el título ya no hereda config.typography.title.color (pensado para fondos claros de la portada) — el LiveBoard siempre tiene fondo oscuro, así que usa un color claro fijo (#EDE0CB) para que nunca se pierda sin importar la paleta del evento
-// 2026-06-19 19:15
+// Cambio: BUG-01 — frontPageUrl usaba window.location.origin/e/:id (sin /ivent/app); QR y link de portada generaban URL rota. Fix: usa appEventUrl() de constants
+// 2026-06-23 21:00
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
+import { appEventUrl } from "../lib/constants"
 
 const SPEED      = 0.6
 const LOAD_LIMIT = 300
@@ -238,7 +239,7 @@ export default function LiveBoard() {
   }
 
   // URL de la portada — mismo destino que usa el QR de EventFrontPage
-  const frontPageUrl = `${window.location.origin}/e/${eventId}`
+  const frontPageUrl = appEventUrl(eventId)
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(frontPageUrl)}`
 
   return (

@@ -1,10 +1,11 @@
 // Página: EventDesigner — app/src/pages/EventDesigner/index.jsx
-// Cambio: fix link hardcodeado "Ver portada" — apuntaba a /iVent/e/ (estructura vieja), corregido a /ivent/app/e/ (estructura nueva con landing en /ivent y app en /ivent/app)
-// 2026-06-19 19:50
+// Cambio: HC-02 + HC-04 — "Ver portada" y QR del preview usaban /ivent/app/e/ hardcodeado; ahora usan appEventPath() y appEventUrl() de constants
+// 2026-06-23 21:00
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { supabase } from '../../lib/supabase'
+import { appEventPath, appEventUrl } from '../../lib/constants'
 import './styles.css'
 
 const STORAGE_BUCKET = 'event-assets'
@@ -381,7 +382,7 @@ export default function EventDesigner() {
         <button className="ed-btn-save" onClick={handleSave} disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
-        <a className="ed-btn-frontpage" href={`/ivent/app/e/${eventId}`} target="_blank" rel="noreferrer">
+        <a className="ed-btn-frontpage" href={appEventPath(eventId)} target="_blank" rel="noreferrer">
           ⛶ Ver portada
         </a>
         <div className="ed-user-chip">
@@ -717,7 +718,7 @@ export default function EventDesigner() {
 
             <div className="ed-ev-qr-block" style={{ background: frames.qr.on ? frames.qr.color : 'transparent', boxShadow: frames.qr.on ? '0 1px 6px rgba(42,31,26,.07)' : 'none' }}>
               <div className="ed-ev-qr-square">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/e/${eventId}`)}`} alt="QR" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appEventUrl(eventId))}`} alt="QR" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <div className="ed-ev-qr-label">Escanea para unirte</div>
             </div>

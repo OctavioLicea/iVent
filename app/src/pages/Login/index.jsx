@@ -1,35 +1,71 @@
 // Página: Login — app/src/pages/Login/index.jsx
-// Cambio: usar SVG real del logo iVent (versión light) en el panel de marca
-// 2026-06-12 19:55
-import { useState, useEffect } from 'react'
+// Cambio: panel de marca con sparkles, naipes de invitaciones, labels de eventos eliminados
+// 2026-06-22 23:15
+
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
+import inviteBoda from '../../assets/invite-boda.png'
+import inviteGraduacion from '../../assets/invite-graduacion.png'
 
 const C = {
-  navy:       '#0F1E35',
-  navyMid:    '#1E3352',
-  gold:       '#C9A84C',
-  goldDark:   '#A8832A',
-  goldLight:  'rgba(201,168,76,0.12)',
-  inkMid:     '#4A4540',
-  inkMute:    '#8A837A',
-  border:     'rgba(15,30,53,0.12)',
+  navy:        '#0F1E35',
+  navyMid:     '#1E3352',
+  navyDeep:    '#06111D',
+  gold:        '#C9A84C',
+  goldDark:    '#A8832A',
+  goldLight:   'rgba(201,168,76,0.12)',
+  inkMid:      '#4A4540',
+  inkMute:     '#8A837A',
+  border:      'rgba(15,30,53,0.12)',
   surfaceInput:'#F7F8FA',
-  red:        '#C0392B',
-  redLight:   '#FDF0EF',
-  green:      '#2D7A4F',
-  greenLight: '#EEF7F2',
+  red:         '#C0392B',
+  redLight:    '#FDF0EF',
+  green:       '#2D7A4F',
+  greenLight:  '#EEF7F2',
+}
+
+function Sparkles() {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const rnd = s => { const x = Math.sin(s) * 10000; return x - Math.floor(x) }
+    const n = 38
+    const dots = []
+    for (let i = 0; i < n; i++) {
+      dots.push({
+        top:    rnd(i * 1.7 + 3) * 100,
+        left:   rnd(i * 2.3 + 7) * 100,
+        size:   1.5 + rnd(i * 3.1 + 1) * 3,
+        tw:     2.4 + rnd(i * 1.3 + 5) * 3.6,
+        dr:     7   + rnd(i * 0.9 + 2) * 9,
+        delay:  -rnd(i * 4.2 + 6) * 6,
+        bright: rnd(i * 5.5 + 4) > 0.72,
+      })
+    }
+    dots.forEach(d => {
+      const outer = document.createElement('div')
+      outer.style.cssText = `position:absolute;top:${d.top}%;left:${d.left}%;animation:spDrift ${d.dr}s ease-in-out ${d.delay}s infinite;`
+      const dot = document.createElement('div')
+      const color = d.bright ? '#F4E2A6' : '#C9A84C'
+      dot.style.cssText = `width:${d.size}px;height:${d.size}px;border-radius:50%;background:${color};box-shadow:0 0 ${d.size*2.5}px ${d.size*.8}px ${color};animation:spTwinkle ${d.tw}s ease-in-out ${d.delay}s infinite;`
+      outer.appendChild(dot)
+      el.appendChild(outer)
+    })
+  }, [])
+  return <div ref={canvasRef} style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none', overflow:'hidden' }} />
 }
 
 export default function Login() {
   const navigate = useNavigate()
   const [tab, setTab] = useState('login')
 
-  const [loginEmail, setLoginEmail]     = useState('')
-  const [loginPass,  setLoginPass]      = useState('')
-  const [loginError, setLoginError]     = useState(null)
-  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginEmail,    setLoginEmail]    = useState('')
+  const [loginPass,     setLoginPass]     = useState('')
+  const [loginError,    setLoginError]    = useState(null)
+  const [loginLoading,  setLoginLoading]  = useState(false)
   const [showLoginPass, setShowLoginPass] = useState(false)
 
   const [regEmail,   setRegEmail]   = useState('')
@@ -88,7 +124,10 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @keyframes spTwinkle { 0%,100%{opacity:.15;transform:scale(.7)} 50%{opacity:1;transform:scale(1)} }
+        @keyframes spDrift   { 0%{transform:translate(0,0)} 50%{transform:translate(10px,-26px)} 100%{transform:translate(0,0)} }
+
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Tenor+Sans&family=DM+Sans:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         html, body, #root { height:100%; }
         body { font-family:'DM Sans',sans-serif; }
@@ -130,44 +169,57 @@ export default function Login() {
         .l-tab.active { color:${C.navy}; border-bottom-color:${C.gold}; }
         .l-tab:hover:not(.active) { color:${C.inkMid}; }
 
+        .naipe {
+          position:absolute;
+          width:52%;
+          max-width:200px;
+          border-radius:14px;
+          overflow:hidden;
+          box-shadow:0 20px 50px rgba(0,0,0,0.5);
+          transition:transform .3s;
+        }
+        .naipe img { width:100%; display:block; }
+        .naipe-back  { transform:rotate(-6deg) translate(-30px, 12px); z-index:1; }
+        .naipe-front { transform:rotate(5deg)  translate(30px, -12px); z-index:2; }
+        .naipes-wrap:hover .naipe-back  { transform:rotate(-9deg) translate(-38px, 18px); }
+        .naipes-wrap:hover .naipe-front { transform:rotate(8deg)  translate(38px, -18px); }
+
         @media (max-width: 860px) {
           .brand-panel { display:none !important; }
-          .layout { grid-template-columns:1fr !important; }
+          .l-layout { grid-template-columns:1fr !important; }
         }
       `}</style>
 
-      <div className="layout" style={{ display:'grid', gridTemplateColumns:'1fr 460px', minHeight:'100vh', width:'100%' }}>
+      <div className="l-layout" style={{ display:'grid', gridTemplateColumns:'1fr 460px', minHeight:'100vh', width:'100%' }}>
 
         {/* LEFT — Brand */}
-        <div className="brand-panel" style={{ background:C.navy, display:'flex', flexDirection:'column', justifyContent:'space-between', padding:48, position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:-100, right:-100, width:400, height:400, borderRadius:'50%', border:'1px solid rgba(201,168,76,0.1)' }} />
-          <div style={{ position:'absolute', bottom:-60, left:-60, width:280, height:280, borderRadius:'50%', border:'1px solid rgba(201,168,76,0.07)' }} />
+        <div className="brand-panel" style={{
+          background: `radial-gradient(120% 90% at 80% 10%, ${C.navyMid} 0%, ${C.navy} 50%, ${C.navyDeep} 100%)`,
+          display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center',
+          padding:48, position:'relative', overflow:'hidden', gap:40,
+        }}>
+          <Sparkles />
 
-          <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:28 }}>
-            <img src={iventLogo} alt="iVent" style={{ width:220 }} />
-            <div style={{ textAlign:'center' }}>
-              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:46, fontWeight:300, color:'#fff', lineHeight:1.2, marginBottom:18 }}>
-                Cada evento,<br/>
-                <em style={{ fontStyle:'italic', color:C.gold }}>un solo link.</em>
-              </div>
-              <p style={{ fontSize:14, color:'rgba(255,255,255,0.42)', lineHeight:1.7, maxWidth:360 }}>
-                Invitaciones digitales, fotos en vivo y gestión de invitados — todo en un lugar que tus invitados ya tienen en el bolsillo.
-              </p>
+          {/* Logo */}
+          <div style={{ position:'relative', zIndex:2, textAlign:'center' }}>
+            <img src={iventLogo} alt="iVent" style={{ width:160, marginBottom:20 }} />
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:42, fontWeight:500, color:'#fff', lineHeight:1.2, marginBottom:14 }}>
+              Cada evento,<br/>
+              <em style={{ fontStyle:'italic', color:C.gold }}>un solo link.</em>
             </div>
+            <p style={{ fontSize:14, color:'rgba(255,255,255,0.45)', lineHeight:1.7, maxWidth:340, margin:'0 auto' }}>
+              Invitaciones digitales, fotos en vivo y gestión de invitados — todo en un lugar que tus invitados ya tienen en el bolsillo.
+            </p>
           </div>
 
-          <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', gap:10 }}>
-            {[
-              { label:'NYO Wedding · En vivo ahora', count:'127 fotos',      dot:'#4CAF89' },
-              { label:'Graduación UAC 2026 · 1 Jul', count:'240 invitados',  dot:C.gold },
-              { label:'XV Valentina · 15 Ago',       count:'En preparación', dot:C.gold },
-            ].map((c, i) => (
-              <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:10, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:30, padding:'8px 14px 8px 10px', width:'fit-content' }}>
-                <div style={{ width:8, height:8, borderRadius:'50%', background:c.dot, flexShrink:0 }} />
-                <span style={{ fontSize:12, color:'rgba(255,255,255,0.55)' }}>{c.label}</span>
-                <span style={{ fontSize:11, fontWeight:600, color:C.gold, marginLeft:4 }}>{c.count}</span>
-              </div>
-            ))}
+          {/* Naipes */}
+          <div className="naipes-wrap" style={{ position:'relative', zIndex:2, width:'100%', height:340, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div className="naipe naipe-back">
+              <img src={inviteGraduacion} alt="Invitación graduación" />
+            </div>
+            <div className="naipe naipe-front">
+              <img src={inviteBoda} alt="Invitación boda" />
+            </div>
           </div>
         </div>
 
