@@ -1,11 +1,11 @@
 // Página: LiveBoard — app/src/pages/LiveBoard.jsx
-// Cambio: BUG-01 — frontPageUrl usaba window.location.origin/e/:id (sin /ivent/app); QR y link de portada generaban URL rota. Fix: usa appEventUrl() de constants
-// 2026-06-23 21:00
+// Razón: Capa 4 — QR → PhotoUpload; "← Invitación"; error state; empty state; botón "Subir más"
+// 2026-06-25 19:20
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
-import { appEventUrl } from "../lib/constants"
+import { appEventUrl, appEventPath } from "../lib/constants"
 
 const SPEED      = 0.6
 const LOAD_LIMIT = 300
@@ -31,16 +31,23 @@ export default function LiveBoard() {
   const [autoScroll, setAutoScroll] = useState(true)
   const [selected, setSelected]     = useState(new Map())
   const [loading, setLoading]       = useState(true)
+  const [loadError, setLoadError]   = useState(false)
 
-  const wrapRef   = useRef(null)
-  const canvasRef = useRef(null)
-  const colsRef   = useRef([])
-  const placedIds = useRef(new Set())
+  const wrapRef    = useRef(null)
+  const canvasRef  = useRef(null)
+  const colsRef    = useRef([])
+  const placedIds  = useRef(new Set())
   const scrollYRef = useRef(0)
-  const autoRef   = useRef(true)
-  const rafRef    = useRef(null)
+  const autoRef    = useRef(true)
+  const rafRef     = useRef(null)
 
   useEffect(() => { autoRef.current = autoScroll }, [autoScroll])
+
+  // URL de la portada (para el botón volver)
+  const frontPageUrl = appEventUrl(eventId)
+  // URL de PhotoUpload (para el QR y el botón "Subir más")
+  const photoUploadUrl = `${appEventUrl(eventId)}/fotos`
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(photoUploadUrl)}`
 
   // Init columnas
   useEffect(() => {
@@ -65,10 +72,6 @@ export default function LiveBoard() {
         setEventTitle(data.title || "Collage en vivo")
         const typo = data.config?.typography?.title
         if (typo?.font) setTitleFont(typo.font)
-        // NOTA: el color del título NO se hereda del config — config.typography.title.color
-        // está pensado para fondos claros (la portada). El LiveBoard siempre tiene fondo
-        // oscuro por diseño, así que el título usa siempre el color claro fijo (titleColor state).
-        // cargar google font dinámicamente
         const font = typo?.font || "Great Vibes"
         const id = 'lb-gfont'
         let link = document.getElementById(id)
@@ -156,7 +159,12 @@ export default function LiveBoard() {
         .in("type", ["image", "video"])
         .order("created_at", { ascending: false })
         .limit(LOAD_LIMIT)
-      if (!error && data) data.forEach(row => placePhoto(row, false))
+      if (error) {
+        setLoadError(true)
+        setLoading(false)
+        return
+      }
+      if (data) data.forEach(row => placePhoto(row, false))
       setLoading(false)
     }
     loadPhotos()
@@ -203,7 +211,6 @@ export default function LiveBoard() {
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  // Toggle autoscroll
   function toggleScroll() {
     const next = !autoScroll
     setAutoScroll(next)
@@ -219,7 +226,6 @@ export default function LiveBoard() {
     }
   }
 
-  // Descarga múltiple
   async function downloadSelected() {
     if (selected.size === 0) return
     for (const [id, url] of selected) {
@@ -238,9 +244,8 @@ export default function LiveBoard() {
     setSelected(new Map())
   }
 
-  // URL de la portada — mismo destino que usa el QR de EventFrontPage
-  const frontPageUrl = appEventUrl(eventId)
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(frontPageUrl)}`
+  // ── Empty state (0 fotos, sin error) ─────────────────────────────────
+  const isEmpty = !loading && !loadError && count === 0
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "linear-gradient(160deg,#0a0a0f 0%,#0f0d14 50%,#0a0c10 100%)", position: "relative" }}>
@@ -288,7 +293,7 @@ export default function LiveBoard() {
         }} />
       </div>
 
-      {/* Botón volver */}
+      {/* ── Botón volver — "← Invitación" ── */}
       <button onClick={() => navigate(`/e/${eventId}`)} style={{
         position: "fixed", top: 16, left: 16, zIndex: 20,
         display: "flex", alignItems: "center", gap: 7,
@@ -296,7 +301,7 @@ export default function LiveBoard() {
         border: "0.5px solid rgba(237,224,203,.2)", borderRadius: 30,
         padding: "7px 14px", fontFamily: "DM Sans,sans-serif", fontSize: 13, cursor: "pointer",
       }}>
-        ← Inicio
+        ← Invitación
       </button>
 
       {/* Live dot */}
@@ -344,9 +349,9 @@ export default function LiveBoard() {
         Auto
       </div>
 
-      {/* QR flotante — lleva a la portada del evento (mismo patrón de generación que EventFrontPage) */}
+      {/* ── QR — ahora apunta a PhotoUpload ── */}
       <a
-        href={frontPageUrl}
+        href={photoUploadUrl}
         target="_blank"
         rel="noopener noreferrer"
         style={{
@@ -362,7 +367,7 @@ export default function LiveBoard() {
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: 5, overflow: "hidden",
         }}>
-          <img src={qrSrc} alt="QR de la portada" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          <img src={qrSrc} alt="QR para subir foto" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
         </div>
         <span style={{
           fontFamily: "DM Sans,sans-serif", fontSize: 10, color: "rgba(237,224,203,.85)",
@@ -395,13 +400,95 @@ export default function LiveBoard() {
         </div>
       )}
 
-      {/* Loading overlay */}
+      {/* ── Loading overlay ── */}
       {loading && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 50, background: "#0a0a0f",
-          display: "flex", alignItems: "center", justifyContent: "center",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14,
         }}>
-          <p style={{ color: "#9C8878", fontFamily: "DM Sans,sans-serif" }}>Cargando collage…</p>
+          <>
+            <style>{`@keyframes iv-spin { to { transform: rotate(360deg) } }`}</style>
+            <div style={{
+              width: 30, height: 30, borderRadius: "50%",
+              border: "2.5px solid rgba(237,224,203,0.15)",
+              borderTopColor: "#C9A84C",
+              animation: "iv-spin 0.8s linear infinite",
+            }} />
+          </>
+          <p style={{ color: "#9C8878", fontFamily: "DM Sans,sans-serif", fontSize: 14, margin: 0 }}>Cargando collage…</p>
+        </div>
+      )}
+
+      {/* ── Error state ── */}
+      {loadError && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50, background: "#0a0a0f",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16,
+          padding: 24, textAlign: "center",
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: "50%",
+            background: "rgba(192,57,43,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24,
+          }}>⚠️</div>
+          <p style={{ color: "#EDE0CB", fontFamily: "DM Sans,sans-serif", fontSize: 15, margin: 0 }}>
+            No se pudieron cargar las fotos.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              background: "rgba(237,224,203,0.1)", color: "#EDE0CB",
+              border: "0.5px solid rgba(237,224,203,0.3)",
+              borderRadius: 20, padding: "10px 24px",
+              fontFamily: "DM Sans,sans-serif", fontSize: 13, cursor: "pointer",
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* ── Empty state — 0 fotos ── */}
+      {isEmpty && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20,
+          padding: 32, textAlign: "center", pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%",
+            background: "rgba(201,168,76,0.10)",
+            border: "1px solid rgba(201,168,76,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 36,
+          }}>📷</div>
+          <div>
+            <p style={{
+              fontFamily: "Cormorant Garamond,serif", fontSize: 26,
+              color: "#EDE0CB", margin: "0 0 8px", lineHeight: 1.2,
+            }}>
+              Sé el primero en<br />compartir una foto
+            </p>
+            <p style={{ color: "rgba(237,224,203,.5)", fontFamily: "DM Sans,sans-serif", fontSize: 13, margin: 0 }}>
+              Escanea el código QR o toca el botón de abajo
+            </p>
+          </div>
+          <a
+            href={photoUploadUrl}
+            style={{
+              pointerEvents: "all",
+              background: "rgba(201,168,76,0.15)",
+              border: "1px solid rgba(201,168,76,0.4)",
+              color: "#C9A84C",
+              borderRadius: 24, padding: "12px 28px",
+              fontFamily: "DM Sans,sans-serif", fontSize: 14, fontWeight: 500,
+              textDecoration: "none",
+              display: "inline-block",
+            }}
+          >
+            Subir foto
+          </a>
         </div>
       )}
 

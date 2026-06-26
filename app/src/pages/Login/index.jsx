@@ -1,6 +1,6 @@
 // Página: Login — app/src/pages/Login/index.jsx
-// Cambio: Capa 3 — importar BRAND de constants; eliminar const C local y @import duplicado
-// 2026-06-23 21:05
+// Razón: Tipo B — reemplazar literales de color con tokens BRAND
+// 2026-06-25 20:10
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -34,7 +34,7 @@ function Sparkles() {
       const outer = document.createElement('div')
       outer.style.cssText = `position:absolute;top:${d.top}%;left:${d.left}%;animation:spDrift ${d.dr}s ease-in-out ${d.delay}s infinite;`
       const dot = document.createElement('div')
-      const color = d.bright ? '#F4E2A6' : '#C9A84C'
+      const color = d.bright ? C.goldBright : C.gold
       dot.style.cssText = `width:${d.size}px;height:${d.size}px;border-radius:50%;background:${color};box-shadow:0 0 ${d.size*2.5}px ${d.size*.8}px ${color};animation:spTwinkle ${d.tw}s ease-in-out ${d.delay}s infinite;`
       outer.appendChild(dot)
       el.appendChild(outer)
@@ -330,10 +330,10 @@ export default function Login() {
 }
 
 const s = {
-  heading: { fontFamily:"'DM Sans',sans-serif", fontSize:26, fontWeight:500, color:'#0F1E35', marginBottom:6, letterSpacing:'-0.01em' },
-  sub:     { fontSize:13, color:'#8A837A', marginBottom:24, lineHeight:1.6 },
+  heading: { fontFamily:"'DM Sans',sans-serif", fontSize:26, fontWeight:500, color:C.navy, marginBottom:6, letterSpacing:'-0.01em' },
+  sub:     { fontSize:13, color:C.inkMute, marginBottom:24, lineHeight:1.6 },
   field:   { marginBottom:14 },
-  label:   { display:'block', fontSize:11, fontWeight:500, color:'#4A4540', letterSpacing:'0.04em', marginBottom:5, textTransform:'uppercase' },
-  alertErr:{ background:'#FDF0EF', color:'#C0392B', border:'1px solid rgba(192,57,43,0.15)', borderRadius:8, padding:'10px 12px', fontSize:12, marginBottom:18, lineHeight:1.5 },
-  alertOk: { background:'#EEF7F2', color:'#2D7A4F', border:'1px solid rgba(45,122,79,0.15)',  borderRadius:8, padding:'10px 12px', fontSize:12, marginBottom:18, lineHeight:1.5 },
+  label:   { display:'block', fontSize:11, fontWeight:500, color:C.inkMid, letterSpacing:'0.04em', marginBottom:5, textTransform:'uppercase' },
+  alertErr:{ background:C.redLight, color:C.red, border:'1px solid rgba(192,57,43,0.15)', borderRadius:8, padding:'10px 12px', fontSize:12, marginBottom:18, lineHeight:1.5 },
+  alertOk: { background:C.greenBg, color:C.green, border:'1px solid rgba(45,122,79,0.15)',  borderRadius:8, padding:'10px 12px', fontSize:12, marginBottom:18, lineHeight:1.5 },
 }

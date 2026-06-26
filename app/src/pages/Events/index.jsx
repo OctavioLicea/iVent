@@ -1,37 +1,181 @@
 // Página: Events — app/src/pages/Events/index.jsx
-// Cambio: Capa 3 — importar BRAND de constants, formatDate de eventHelpers; eliminar const C local y @import duplicado
-// 2026-06-23 21:05
+// Razón: modal de tipo de evento al crear; config default elegante (marino, módulos OFF, maps OFF)
+// 2026-06-25 20:10
+
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { appEventPath, BRAND as C } from '../../lib/constants'
-import { formatDate } from '../../lib/eventHelpers'
+import { formatDate, PALETTES, DEFAULT_TYPOGRAPHY } from '../../lib/eventHelpers'
 
+// ─── Paleta default por tipo de evento ───────────────────────────────────
+const PALETTE_BY_SLUG = {
+  boda:        'boda',      // Romance — vino & kraft
+  xv:          'quince',    // Lila & Rosa
+  graduacion:  'botanico',  // Jardín — verde & crema
+  escolar:     'botanico',
+  social:      'marino',    // Marino & Oro (default para el resto)
+  deportivo:   'marino',
+  politico:    'marino',
+  empresarial: 'marino',
+  otro:        'marino',
+}
+
+const TITLE_BY_SLUG = {
+  boda:        'Mi boda',
+  xv:          'Mis XV Años',
+  graduacion:  'Mi graduación',
+  deportivo:   'Mi evento',
+  escolar:     'Mi evento',
+  politico:    'Mi evento',
+  empresarial: 'Mi evento',
+  social:      'Mi celebración',
+  otro:        'Mi evento',
+}
+
+function buildDefaultConfig(slug) {
+  const paletteKey = PALETTE_BY_SLUG[slug] || 'marino'
+  const palette    = PALETTES[paletteKey]
+  return {
+    palette,
+    typography: DEFAULT_TYPOGRAPHY,
+    frames: {
+      inv:     { color: palette.kraft,       on: true  },
+      nav:     { color: palette.surface,     on: true  },
+      qr:      { color: palette.surface2,    on: true  },
+      maps_a:  { color: palette.primaryDark },
+      maps_b:  { color: palette.accent      },
+      maps_on: false,   // OFF — se activa cuando el org. pega una URL
+    },
+    modules: {
+      fotos:   false,   // El org. activa uno por uno
+      collage: false,
+      crono:   false,
+      deseos:  false,
+      mesas:   false,
+    },
+  }
+}
+
+// ─── Status chip ─────────────────────────────────────────────────────────
 function statusLabel(event) {
-  // Por ahora derivamos el status de la fecha
   const today = new Date()
   const start = event.start_date ? new Date(event.start_date) : null
   if (!start) return { label: 'Borrador', bg: C.bg, color: C.inkMute }
   const diff = (start - today) / (1000 * 60 * 60 * 24)
-  if (diff < -1)  return { label: 'Finalizado', bg: '#F4F5F7',    color: C.inkMute }
-  if (diff <= 1)  return { label: 'Live',        bg: C.greenBg,    color: C.green }
-  if (diff <= 30) return { label: 'En prep.',    bg: C.goldLight,  color: C.goldDark }
-  return              { label: 'Borrador',    bg: C.bg,         color: C.inkMute }
+  if (diff < -1)  return { label: 'Finalizado', bg: '#F4F5F7',   color: C.inkMute }
+  if (diff <= 1)  return { label: 'Live',        bg: C.greenBg,   color: C.green   }
+  if (diff <= 30) return { label: 'En prep.',    bg: C.goldLight, color: C.goldDark }
+  return              { label: 'Borrador',    bg: C.bg,        color: C.inkMute }
 }
 
+// ─── Modal de tipo de evento ──────────────────────────────────────────────
+function TypeModal({ eventTypes, onConfirm, onCancel, creating }) {
+  const [selected, setSelected] = useState(null)
 
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(6,17,29,0.65)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+    }}>
+      <div style={{
+        background: C.surface, borderRadius: 16,
+        padding: '32px 28px', width: '100%', maxWidth: 480,
+        boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
+      }}>
+        <h2 style={{
+          fontFamily: "'Tenor Sans', sans-serif", fontSize: 20,
+          fontWeight: 400, color: C.navy, marginBottom: 6,
+        }}>
+          ¿Qué tipo de evento es?
+        </h2>
+        <p style={{ fontSize: 13, color: C.inkMute, marginBottom: 24 }}>
+          Esto define la paleta y el diseño inicial.
+        </p>
+
+        {/* Grid de tipos */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28,
+        }}>
+          {eventTypes.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setSelected(t)}
+              style={{
+                border: selected?.id === t.id
+                  ? `2px solid ${C.navy}`
+                  : `1.5px solid ${C.border}`,
+                borderRadius: 12,
+                padding: '14px 8px',
+                background: selected?.id === t.id ? C.bg : C.surface,
+                cursor: 'pointer',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 8,
+                transition: 'border-color .12s, background .12s',
+              }}
+            >
+              <span style={{ fontSize: 26 }}>{t.icon}</span>
+              <span style={{
+                fontSize: 12, fontFamily: "'DM Sans', sans-serif",
+                color: selected?.id === t.id ? C.navy : C.inkMid,
+                fontWeight: selected?.id === t.id ? 600 : 400,
+              }}>{t.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Acciones */}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button
+            onClick={onCancel}
+            style={{
+              background: 'none', border: 'none',
+              fontSize: 13, color: C.inkMute,
+              fontFamily: "'DM Sans', sans-serif", cursor: 'pointer', padding: '8px 12px',
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => selected && onConfirm(selected)}
+            disabled={!selected || creating}
+            style={{
+              background: selected ? C.navy : C.bg,
+              color: selected ? C.gold : C.inkMute,
+              border: 'none', borderRadius: 8,
+              padding: '10px 22px',
+              fontFamily: "'Tenor Sans', sans-serif",
+              fontSize: 13, letterSpacing: '0.08em',
+              cursor: selected && !creating ? 'pointer' : 'default',
+              transition: 'background .15s',
+            }}
+          >
+            {creating ? 'Creando…' : 'Crear evento'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────
 export default function Events() {
-  const [events,  setEvents]  = useState([])
-  const [loading, setLoading] = useState(true)
-  const [user,    setUser]    = useState(null)
-  const [creating, setCreating] = useState(false)
-  const [showArchived, setShowArchived] = useState(false)
+  const [events,      setEvents]      = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [user,        setUser]        = useState(null)
+  const [creating,    setCreating]    = useState(false)
+  const [showArchived,setShowArchived] = useState(false)
+  const [showModal,   setShowModal]   = useState(false)
+  const [eventTypes,  setEventTypes]  = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user))
     loadEvents()
+    loadEventTypes()
   }, [])
 
   async function loadEvents() {
@@ -43,26 +187,40 @@ export default function Events() {
     setLoading(false)
   }
 
+  async function loadEventTypes() {
+    const { data } = await supabase.from('event_types').select('id, slug, label, icon').order('id')
+    if (data) setEventTypes(data)
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/login')
   }
 
-  async function handleNewEvent() {
+  async function handleConfirmType(type) {
     setCreating(true)
+    const slug    = type.slug
+    const title   = TITLE_BY_SLUG[slug] || 'Mi evento'
+    const config  = buildDefaultConfig(slug)
+
     const { data, error } = await supabase
       .from('events')
       .insert({
-        name: 'Nuevo evento',
-        title: 'Nuevo evento',
+        name:       title,
+        title:      title,
         created_by: user?.id,
+        type_id:    type.id,
         start_date: new Date().toISOString().slice(0, 10),
+        config,
       })
       .select('id')
       .single()
+
     setCreating(false)
+    setShowModal(false)
+
     if (error) { alert('Error al crear evento: ' + error.message); return }
-    navigate(`/event-designer/${data.id}`)
+    navigate(`/event-designer/${data.id}?new=1`)
   }
 
   async function toggleArchived(eventId, current) {
@@ -75,8 +233,8 @@ export default function Events() {
     return email.slice(0, 2).toUpperCase()
   }
 
-  const archivedCount = events.filter(e => e.archived).length
-  const visibleEvents = showArchived ? events : events.filter(e => !e.archived)
+  const archivedCount  = events.filter(e => e.archived).length
+  const visibleEvents  = showArchived ? events : events.filter(e => !e.archived)
 
   return (
     <>
@@ -114,9 +272,7 @@ export default function Events() {
           background:none; border:none;
           font-family:'DM Sans',sans-serif;
           font-size:13px; color:rgba(237,224,203,0.5);
-          cursor:pointer;
-          transition:color .15s;
-          padding:0;
+          cursor:pointer; transition:color .15s; padding:0;
         }
         .logout-btn:hover { color:#EDE0CB; }
 
@@ -126,8 +282,7 @@ export default function Events() {
           padding:9px 18px;
           font-family:'Tenor Sans',sans-serif;
           font-size:12px; letter-spacing:0.1em;
-          cursor:pointer;
-          transition:background .15s;
+          cursor:pointer; transition:background .15s;
         }
         .new-btn:hover { background:${C.navyMid}; }
 
@@ -137,10 +292,8 @@ export default function Events() {
           border-radius:6px;
           padding:5px 10px;
           font-family:'DM Sans',sans-serif;
-          font-size:11px;
-          color:${C.inkMute};
-          cursor:pointer;
-          white-space:nowrap;
+          font-size:11px; color:${C.inkMute};
+          cursor:pointer; white-space:nowrap;
           transition:border-color .15s, color .15s, background .15s;
         }
         .card-action-btn:hover {
@@ -150,36 +303,28 @@ export default function Events() {
         }
       `}</style>
 
+      {/* Modal de tipo */}
+      {showModal && (
+        <TypeModal
+          eventTypes={eventTypes}
+          onConfirm={handleConfirmType}
+          onCancel={() => setShowModal(false)}
+          creating={creating}
+        />
+      )}
+
       {/* Topnav */}
       <nav style={{
-        background: C.navy,
-        padding: '0 32px',
-        height: 52,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0,
+        background: C.navy, padding: '0 32px', height: 52,
+        display: 'flex', alignItems: 'center', gap: 0,
         borderBottom: '0.5px solid rgba(255,255,255,0.06)',
       }}>
-        {/* Logo */}
-        <img
-          src={iventLogo}
-          alt="iVent"
-          style={{ height:28, cursor:'pointer' }}
-          onClick={() => navigate('/events')}
-        />
-
-        {/* Separador */}
+        <img src={iventLogo} alt="iVent" style={{ height:28, cursor:'pointer' }} onClick={() => navigate('/events')} />
         <div style={{ width:'0.5px', height:18, background:'rgba(255,255,255,0.15)', margin:'0 20px' }} />
-
-        {/* Breadcrumb */}
         <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:'rgba(237,224,203,0.55)' }}>
           Mis eventos
         </span>
-
-        {/* Spacer */}
         <div style={{ flex:1 }} />
-
-        {/* User chip */}
         {user && (
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.06)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:30, padding:'5px 12px 5px 6px' }}>
@@ -197,8 +342,6 @@ export default function Events() {
 
       {/* Content */}
       <div style={{ maxWidth:680, margin:'0 auto', padding:'40px 24px' }}>
-
-        {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28 }}>
           <div>
             <h1 style={{ fontFamily:"'Tenor Sans',sans-serif", fontSize:26, fontWeight:400, color:C.navy, letterSpacing:'-0.01em' }}>
@@ -215,12 +358,11 @@ export default function Events() {
               </p>
             )}
           </div>
-          <button className="new-btn" onClick={handleNewEvent} disabled={creating}>
-            {creating ? 'Creando…' : '+ Nuevo evento'}
+          <button className="new-btn" onClick={() => setShowModal(true)} disabled={creating}>
+            + Nuevo evento
           </button>
         </div>
 
-        {/* Lista */}
         {loading ? (
           <p style={{ fontSize:13, color:C.inkMute, textAlign:'center', padding:'40px 0' }}>Cargando…</p>
         ) : visibleEvents.length === 0 ? (
@@ -244,9 +386,7 @@ export default function Events() {
                   style={{ opacity: event.archived ? 0.5 : 1 }}
                   onClick={() => navigate(`/event-designer/${event.id}`)}
                 >
-                  <div className="event-thumb" style={{
-                    backgroundImage: `url("${event.flyer_url || event.bg_url || ''}")`,
-                  }}>
+                  <div className="event-thumb" style={{ backgroundImage: `url("${event.flyer_url || event.bg_url || ''}")` }}>
                     {!event.flyer_url && !event.bg_url && '🎉'}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -262,22 +402,13 @@ export default function Events() {
                     <span style={{ fontSize:11, background:st.bg, color:st.color, padding:'3px 10px', borderRadius:20, fontFamily:"'DM Sans',sans-serif", whiteSpace:'nowrap' }}>
                       {st.label}
                     </span>
-                    <button
-                      className="card-action-btn"
-                      onClick={(e) => { e.stopPropagation(); window.open(appEventPath(event.id), '_blank', 'noopener,noreferrer') }}
-                    >
+                    <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); window.open(appEventPath(event.id), '_blank', 'noopener,noreferrer') }}>
                       Ver portada
                     </button>
-                    <button
-                      className="card-action-btn"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/event-designer/${event.id}`) }}
-                    >
+                    <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); navigate(`/event-designer/${event.id}`) }}>
                       Editar evento
                     </button>
-                    <button
-                      className="card-action-btn"
-                      onClick={(e) => { e.stopPropagation(); toggleArchived(event.id, event.archived) }}
-                    >
+                    <button className="card-action-btn" onClick={(e) => { e.stopPropagation(); toggleArchived(event.id, event.archived) }}>
                       {event.archived ? 'Mostrar' : 'Ocultar'}
                     </button>
                     <span style={{ color:C.inkMute, fontSize:18, lineHeight:1 }}>›</span>

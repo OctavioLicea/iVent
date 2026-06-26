@@ -1,6 +1,6 @@
 // Página: EventFrontPage — app/src/pages/EventFrontPage.jsx
-// Cambio: Capa 2 — eliminar código duplicado; importar desde eventHelpers
-// 2026-06-23 22:00
+// Razón: maps bar glass effect; QR label "Comparte el evento"
+// 2026-06-25 20:30
 
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -11,7 +11,8 @@ import {
   formatDate, formatTime, hexToRgb, darken, lighten, customPaletteToColors,
   defaultTypoColor, resolvePalette, resolveTypography, resolveFrames,
 } from "../lib/eventHelpers"
-
+import LoadingScreen from "../components/LoadingScreen"
+import ErrorScreen from "../components/ErrorScreen"
 
 
 export default function EventFrontPage() {
@@ -61,8 +62,7 @@ export default function EventFrontPage() {
   }
 
   function copyLink() {
-    const link = eventUrl
-    navigator.clipboard.writeText(link).then(() => {
+    navigator.clipboard.writeText(eventUrl).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
@@ -72,29 +72,16 @@ export default function EventFrontPage() {
     navigate(`/e/${eventId}/${path}`)
   }
 
-  if (loading) {
-    return (
-      <div style={styles.centered}>
-        <p style={styles.loadingText}>Cargando evento…</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div style={styles.centered}>
-        <p style={styles.errorText}>{error}</p>
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen msg="Cargando evento…" />
+  if (error)   return <ErrorScreen msg={error} onRetry={loadEvent} />
 
   const { title, subtitle, start_date, start_time, venue, venue_url, logo_url, flyer_url, bg_url, config } = event
 
-  const palette = resolvePalette(config)
+  const palette    = resolvePalette(config)
   const typography = resolveTypography(config)
-  const frames = resolveFrames(config)
-  const invFit = config?.inv_fit || 'contain'
-  const invSize = config?.inv_size || 140
+  const frames     = resolveFrames(config)
+  const invFit     = config?.inv_fit || 'contain'
+  const invSize    = config?.inv_size || 140
 
   const dateLine = [formatDate(start_date), formatTime(start_time?.substring(0,5)), venue].filter(Boolean).join(' · ')
 
@@ -142,7 +129,7 @@ export default function EventFrontPage() {
             href={venue_url || "#"}
             target="_blank"
             rel="noreferrer"
-            style={{ ...styles.venueBar, background: `linear-gradient(90deg, ${frames.maps_a.color} 0%, ${frames.maps_b.color} 100%)` }}
+            style={{ ...styles.venueBar, background: `linear-gradient(90deg, ${frames.maps_a.color}BB 0%, ${frames.maps_b.color}BB 100%)` }}
           >
             <span style={styles.venueIcon}>📍</span>
             <span style={{ ...styles.venueText, fontFamily: `'${typography.display.font}', serif` }}>¿Cómo llegar?</span>
@@ -269,102 +256,56 @@ const styles = {
     alignItems: "center",
     gap: 12,
   },
-  centered: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingText: { color: "#9C8878", fontSize: 14 },
-  errorText: { color: "#7D2935", fontSize: 14 },
   header: { textAlign: "center", width: "100%" },
   headerRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%" },
   logo: { width: 44, height: 44, objectFit: "contain", borderRadius: 8, flexShrink: 0 },
   headerText: { textAlign: "center", flex: 1 },
   venueBar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    width: "100%",
-    color: "#fff",
-    padding: "12px 16px",
-    borderRadius: 10,
-    textDecoration: "none",
-    fontSize: 15,
-    fontWeight: 600,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    gap: 8, width: "100%", color: "#fff",
+    padding: "9px 16px", borderRadius: 10,
+    textDecoration: "none", fontSize: 14, fontWeight: 600,
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    border: "0.5px solid rgba(255,255,255,0.22)",
   },
   venueIcon: { fontSize: 16 },
   venueText: { textAlign: "center" },
   central: { display: "flex", gap: 10, width: "100%", alignItems: "stretch" },
   flyerWrap: {
-    borderRadius: 12,
-    overflow: "hidden",
-    minHeight: 300,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
+    borderRadius: 12, overflow: "hidden", minHeight: 300,
+    display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
   },
   flyerImg: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
   flyerPlaceholder: { textAlign: "center", padding: 16 },
   rightCol: { flex: 1, display: "flex", flexDirection: "column", gap: 8, minWidth: 0 },
   navItem: {
-    border: "none",
-    borderRadius: 10,
-    padding: "10px 11px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 9,
-    textAlign: "left",
-    width: "100%",
-    color: "inherit",
+    border: "none", borderRadius: 10, padding: "10px 11px",
+    cursor: "pointer", display: "flex", alignItems: "center", gap: 9,
+    textAlign: "left", width: "100%", color: "inherit",
   },
   navIcon: {
-    fontSize: 15,
-    width: 30,
-    height: 30,
-    borderRadius: 7,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
+    fontSize: 15, width: 30, height: 30, borderRadius: 7,
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
   },
   navBody: { flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 0 },
   navSub: { fontSize: 10, color: "#9C8878", display: "block" },
   navArrow: { fontSize: 15, color: "#9C8878", flexShrink: 0 },
   noModules: { fontSize: 13, color: "#9C8878", textAlign: "center", padding: 20 },
   qrCard: {
-    width: "100%",
-    borderRadius: 12,
-    padding: "12px 14px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 7,
+    width: "100%", borderRadius: 12, padding: "12px 14px",
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 7,
   },
   qrSquare: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    background: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-    overflow: "hidden",
+    width: 100, height: 100, borderRadius: 8, background: "#fff",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    padding: 8, overflow: "hidden",
   },
   qrImg: { width: "100%", height: "100%", objectFit: "contain" },
   shareBtn: {
-    marginTop: 10,
-    background: "transparent",
-    border: "1px solid",
-    borderRadius: 20,
-    padding: "6px 14px",
-    fontFamily: "DM Sans, sans-serif",
-    fontSize: 12,
-    cursor: "pointer",
+    marginTop: 10, background: "transparent", border: "1px solid",
+    borderRadius: 20, padding: "6px 14px",
+    fontFamily: "DM Sans, sans-serif", fontSize: 12, cursor: "pointer",
   },
   shareOverlay: {
     position: "fixed", inset: 0, background: "rgba(0,0,0,.45)",
@@ -384,8 +325,7 @@ const styles = {
   },
   shareQrBox: {
     width: 180, height: 180, borderRadius: 10,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    marginBottom: 16,
+    display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
   },
   shareLinkRow: { display: "flex", gap: 8, width: "100%" },
   shareLinkInput: {

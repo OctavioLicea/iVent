@@ -1,8 +1,8 @@
 // Página: EventDesigner — app/src/pages/EventDesigner/index.jsx
-// Cambio: Capa 2 — eliminar código duplicado; importar desde eventHelpers
-// 2026-06-23 22:00
+// Razón: fix loading módulos boolean; discard evento nuevo; label Configuración; QR label
+// 2026-06-25 20:30
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { supabase } from '../../lib/supabase'
 import { appEventPath, appEventUrl } from '../../lib/constants'
@@ -30,9 +30,14 @@ export default function EventDesigner() {
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams()
+  const isNewEvent  = searchParams.get('new') === '1'
+  const hasSavedRef = { current: false }
+  const [showDiscardModal, setShowDiscardModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedMsg, setSavedMsg] = useState(false)
   const [activeSection, setActiveSection] = useState('identidad')
+  const [highlightRole, setHighlightRole] = useState(null)
   const [eventName, setEventName] = useState('Cargando…')
   const [userEmail, setUserEmail] = useState('')
 
@@ -126,7 +131,15 @@ export default function EventDesigner() {
         setModules(prev => {
           const merged = { ...prev }
           Object.keys(cfg.modules).forEach(k => {
-            if (merged[k]) merged[k] = { active: cfg.modules[k].active !== false, label: cfg.modules[k].label || merged[k].label }
+            if (!merged[k]) return
+            const v = cfg.modules[k]
+            if (typeof v === 'boolean') {
+              // Formato nuevo: { fotos: false, collage: true, ... }
+              merged[k] = { active: v, label: merged[k].label }
+            } else if (v && typeof v === 'object') {
+              // Formato viejo: { fotos: { active: true, label: '...' }, ... }
+              merged[k] = { active: v.active !== false, label: v.label || merged[k].label }
+            }
           })
           return merged
         })
@@ -227,8 +240,14 @@ export default function EventDesigner() {
     const { error } = await supabase.from('events').update(payload).eq('id', eventId)
     setSaving(false)
     if (error) { alert('Error al guardar: ' + error.message); return }
+    hasSavedRef.current = true
     setSavedMsg(true)
     setTimeout(() => setSavedMsg(false), 2500)
+  }
+
+  async function handleDiscard() {
+    await supabase.from('events').delete().eq('id', eventId)
+    navigate('/events')
   }
 
   if (loading) return <div className="ed-loading">Cargando…</div>
@@ -301,7 +320,10 @@ export default function EventDesigner() {
           <div className="ed-user-avatar">{userEmail.substring(0, 2).toUpperCase()}</div>
           <span className="ed-user-email">{userEmail}</span>
         </div>
-        <button className="ed-topnav-back" onClick={() => navigate('/events')}>← Mis eventos</button>
+        <button className="ed-topnav-back" onClick={() => {
+          if (isNewEvent && !hasSavedRef.current) { setShowDiscardModal(true) }
+          else { navigate('/events') }
+        }}>← Mis eventos</button>
       </nav>
 
       <div className="ed-workspace">
@@ -309,7 +331,7 @@ export default function EventDesigner() {
         <aside className="ed-sidebar">
           {['Evento', 'Configuración'].map(group => (
             <div key={group}>
-              <div className="ed-sidebar-label">{group}</div>
+              {group !== 'Configuración' && <div className="ed-sidebar-label">{group}</div>}
               {SECTIONS.filter(s => s.group === group).map(s => (
                 <div key={s.key} className={`ed-nav-item ${activeSection === s.key ? 'active' : ''}`} onClick={() => setActiveSection(s.key)}>
                   <span className="ed-nav-icon">{s.icon}</span>
@@ -499,7 +521,7 @@ export default function EventDesigner() {
                     const t = typography[role.key]
                     const color = t.color || defaultTypoColor(role.key, palette)
                     return (
-                      <tr key={role.key} className="ed-typo-row">
+                      <tr key={role.key} className="ed-typo-row" onMouseEnter={() => setHighlightRole(role.key)} onMouseLeave={() => setHighlightRole(null)}>
                         <td><span className="ed-typo-badge">{role.label}</span></td>
                         <td>
                           <div className="ed-typo-sample" style={{ fontFamily: `'${t.font}',serif`, fontSize: Math.min(t.size, 17) + 'px', fontWeight: t.bold ? 700 : 400, color }}>
@@ -590,11 +612,11 @@ export default function EventDesigner() {
               <div className="ed-ev-header-row">
                 {images.logo && logoOn && <img className="ed-ev-logo" src={images.logo} alt="" />}
                 <div className="ed-ev-header-text">
-                  <div className="ed-ev-names" style={typoStyle('title')}>{names || 'Nombres'}</div>
-                  {subtitle && <div className="ed-ev-display" style={typoStyle('display')}>{subtitle}</div>}
+                  <div className="ed-ev-names" style={{ ...typoStyle('title'), outline: highlightRole === 'title' ? '2px solid #C9A84C' : 'none', borderRadius: 4, transition: 'outline 0.15s' }}>{names || 'Nombres'}</div>
+                  {subtitle && <div className="ed-ev-display" style={{ ...typoStyle('display'), outline: highlightRole === 'display' ? '2px solid #C9A84C' : 'none', borderRadius: 4, transition: 'outline 0.15s' }}>{subtitle}</div>}
                 </div>
               </div>
-              <div className="ed-ev-date-row"><span className="ed-ev-date" style={typoStyle('caption')}>{dateLine}</span></div>
+              <div className="ed-ev-date-row"><span className="ed-ev-date" style={{ ...typoStyle('caption'), outline: highlightRole === 'caption' ? '2px solid #C9A84C' : 'none', borderRadius: 3, transition: 'outline 0.15s' }}>{dateLine}</span></div>
             </div>
 
             {frames.maps_on && (
@@ -619,7 +641,7 @@ export default function EventDesigner() {
                   <div key={d.key} className="ed-ev-nav-item" style={{ background: frames.nav.on ? frames.nav.color : 'transparent', boxShadow: frames.nav.on ? '0 1px 6px rgba(42,31,26,.07)' : 'none' }}>
                     <div className={`ed-ev-nav-icon mod-${d.key}`}>{d.icon}</div>
                     <div className="ed-ev-nav-body">
-                      <div className="ed-ev-nav-title" style={{ ...typoStyle('label'), fontSize: Math.min(typography.label.size, 13) + 'px' }}>{modules[d.key].label || '—'}</div>
+                      <div className="ed-ev-nav-title" style={{ ...typoStyle('label'), fontSize: Math.min(typography.label.size, 13) + 'px', outline: highlightRole === 'label' ? '2px solid #C9A84C' : 'none', borderRadius: 3, transition: 'outline 0.15s' }}>{modules[d.key].label || '—'}</div>
                       <div className="ed-ev-nav-sub">{d.sub}</div>
                     </div>
                     <div className="ed-ev-nav-arrow">›</div>
@@ -632,12 +654,50 @@ export default function EventDesigner() {
               <div className="ed-ev-qr-square">
                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appEventUrl(eventId))}`} alt="QR" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
-              <div className="ed-ev-qr-label">Escanea para unirte</div>
+              <div className="ed-ev-qr-label">Comparte el evento</div>
             </div>
           </div>
           <div className="ed-preview-hint">Este es el link que recibirán tus invitados.<br />Cada cambio se refleja al instante.</div>
         </div>
       </div>
+
+      {/* ── Modal descartar evento nuevo ── */}
+      {showDiscardModal && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:300,
+          background:'rgba(6,17,29,0.65)',
+          display:'flex', alignItems:'center', justifyContent:'center', padding:24,
+        }}>
+          <div style={{
+            background:'#fff', borderRadius:16, padding:'28px 24px',
+            width:'100%', maxWidth:360,
+            boxShadow:'0 24px 60px rgba(0,0,0,0.25)',
+            textAlign:'center',
+          }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>🗑</div>
+            <h3 style={{ fontFamily:"'Tenor Sans',sans-serif", fontSize:18, fontWeight:400, color:'#0F1E35', marginBottom:8 }}>
+              ¿Descartar este evento?
+            </h3>
+            <p style={{ fontSize:13, color:'#8A837A', marginBottom:24, lineHeight:1.6 }}>
+              El evento no tiene cambios guardados.<br />Se eliminará permanentemente.
+            </p>
+            <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+              <button
+                onClick={() => setShowDiscardModal(false)}
+                style={{ background:'none', border:'1px solid #E0E0E0', borderRadius:8, padding:'10px 20px', fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#4A4540' }}
+              >
+                Seguir editando
+              </button>
+              <button
+                onClick={handleDiscard}
+                style={{ background:'#C0392B', border:'none', borderRadius:8, padding:'10px 20px', fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#fff', fontWeight:500 }}
+              >
+                Sí, descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
