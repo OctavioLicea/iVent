@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
  * useEventTheme
  * Carga el config del evento desde Supabase y aplica los tokens de diseño
  * como CSS variables en :root. Úsalo en cualquier página del invitado.
- * 23/06 22:21
+ * 2026-06-25 21:00
  * @param {string} eventId - UUID del evento
  * @returns {{ event, config, loading, error }}
  */
@@ -123,16 +123,35 @@ function hexWithAlpha(hex, alpha) {
  */
 function loadGoogleFonts(typo) {
   const FONT_MAP = {
+    // Scripts
     'Great Vibes':          'Great+Vibes',
-    'Cormorant Garamond':   'Cormorant+Garamond:wght@400;500;600',
-    'DM Sans':              'DM+Sans:wght@300;400;500',
-    'Playfair Display':     'Playfair+Display:wght@400;600',
-    'Lora':                 'Lora:wght@400;500',
-    'Montserrat':           'Montserrat:wght@300;400;500',
-    'Raleway':              'Raleway:wght@300;400;500',
-    'EB Garamond':          'EB+Garamond:wght@400;500',
+    'Parisienne':           'Parisienne',
+    'Alex Brush':           'Alex+Brush',
+    'Sacramento':           'Sacramento',
     'Dancing Script':       'Dancing+Script:wght@400;600',
+    'Pinyon Script':        'Pinyon+Script',
+    'Satisfy':              'Satisfy',
+    // Serif clásicas
+    'Cormorant Garamond':   'Cormorant+Garamond:wght@400;500;600',
+    'EB Garamond':          'EB+Garamond:wght@400;500',
+    'Playfair Display':     'Playfair+Display:wght@400;600',
+    'Bodoni Moda':          'Bodoni+Moda:opsz,wght@6,400;6,600',
+    'Libre Baskerville':    'Libre+Baskerville:wght@400;700',
+    'Crimson Pro':          'Crimson+Pro:wght@400;600',
+    'Lora':                 'Lora:wght@400;500',
+    'Spectral':             'Spectral:wght@400;600',
+    'Italiana':             'Italiana',
+    // Serif ornamentales
+    'Cinzel':               'Cinzel:wght@400;600',
+    'Cinzel Decorative':    'Cinzel+Decorative:wght@400;700',
+    'Philosopher':          'Philosopher:wght@400;700',
+    // Sans
+    'DM Sans':              'DM+Sans:wght@300;400;500',
     'Josefin Sans':         'Josefin+Sans:wght@300;400;600',
+    'Raleway':              'Raleway:wght@300;400;500',
+    'Montserrat':           'Montserrat:wght@300;400;500',
+    'Jost':                 'Jost:wght@300;400;500',
+    'Outfit':               'Outfit:wght@300;400;500',
   }
  
   // Recolecta fuentes únicas del evento

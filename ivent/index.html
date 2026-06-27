@@ -1,9 +1,8 @@
 <!--
   Página: Landing iVent — eventosytech.com/ivent/index.html
-  Motivo: Reconstrucción del handoff de Claude Design (formato x-dc propietario) a HTML/CSS estándar.
-          Sección de precios removida (pendiente confirmar), CTA principal apunta a WhatsApp,
-          agregado responsive completo para mobile.
-  Timestamp: 2026-06-21 09:14 (Monterrey, CDT UTC-6)
+  Motivo: Fix bug mobile — nav-overlay fuera del nav interceptaba taps en nav-links (Login no navegaba).
+          Movido nav-overlay adentro del .nav para quedar en el mismo stacking context que nav-links.
+  Timestamp: 2026-06-25 12:30 (Monterrey, CDT UTC-6)
 -->
 <!DOCTYPE html>
 <html lang="es-MX">
@@ -17,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#0B1B2D;
+    --navy:#0F1E35;
     --navy-deep:#06111D;
     --navy-mid:#14304D;
     --gold:#C9A84C;
@@ -49,10 +48,13 @@
   @keyframes hvFloat4{0%,100%{transform:translateY(0) rotate(6deg)}50%{transform:translateY(-10px) rotate(6deg)}}
   @keyframes hvTwinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
   @keyframes hvDrift{0%{transform:translate(0,0)}50%{transform:translate(10px,-26px)}100%{transform:translate(0,0)}}
+  @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 10px 24px rgba(201,168,76,.3)}50%{transform:scale(1.05);box-shadow:0 16px 36px rgba(201,168,76,.55)}}
 
   /* ---------- Nav ---------- */
   .nav{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:24px 60px}
-  .nav-logo img{height:26px;width:auto}
+  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .nav-logo img{height:32px;width:auto}
+  .nav-logo-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff;letter-spacing:.02em}
   .nav-links{display:flex;align-items:center;gap:30px}
   .nav-link{color:rgba(255,255,255,.72);font-size:14px;font-weight:500;transition:color .2s}
   .nav-link:hover{color:#fff}
@@ -63,6 +65,7 @@
 
   /* ---------- Hero ---------- */
   .hero{position:relative;overflow:hidden;min-height:100vh;background:radial-gradient(120% 90% at 82% 4%, var(--navy-mid) 0%, var(--navy) 48%, var(--navy-deep) 100%)}
+  .hero .device-wrapper{position:relative}
   .sparkles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
   .sparkle-dot{position:absolute;border-radius:50%}
 
@@ -82,8 +85,8 @@
   .legend-text{color:rgba(255,255,255,.82);font-size:13.5px;font-weight:600;line-height:1.3}
 
   .hero-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-  .btn-primary{color:var(--navy);background:var(--gold);font-size:16px;font-weight:700;padding:16px 30px;border-radius:999px;box-shadow:0 10px 24px rgba(201,168,76,.3);transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:10px}
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(201,168,76,.45)}
+  .btn-primary{color:var(--navy);background:var(--gold);font-size:16px;font-weight:700;padding:16px 30px;border-radius:999px;box-shadow:0 10px 24px rgba(201,168,76,.3);transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:10px;animation:pulse 2s ease-in-out infinite}
+  .btn-primary:hover{animation:none;transform:translateY(-2px);box-shadow:0 16px 32px rgba(201,168,76,.45)}
   .btn-ghost{color:#fff;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:10px;transition:color .2s}
   .btn-ghost:hover{color:var(--gold-light)}
   .btn-ghost-circle{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.35);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
@@ -164,7 +167,33 @@
   .invite-venue{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.04em}
   .invite-rsvp{margin-top:34px;display:inline-block;background:var(--gold);color:var(--navy);font-size:12px;font-weight:700;padding:10px 22px;border-radius:999px}
 
-  /* CTA final */
+  /* Invitación layout 3 columnas */
+  .invite-layout{display:grid;grid-template-columns:1fr 1fr 0.6fr;gap:48px;align-items:center}
+  .invite-copy{display:flex;flex-direction:column;gap:24px}
+  .invite-share-desktop{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .invite-share-desktop img{width:100%;max-width:220px;border-radius:16px;box-shadow:0 16px 40px rgba(11,27,45,.15)}
+  .invite-share-label{font-size:13px;font-weight:600;color:var(--body-light);letter-spacing:.04em;text-align:center}
+  .invite-share-mobile{display:none;flex-direction:column;align-items:center;gap:10px}
+  .invite-share-mobile img{width:100%;max-width:280px;border-radius:16px;box-shadow:0 12px 32px rgba(11,27,45,.12)}
+
+  /* Naipes */
+  .invite-naipes{position:relative;width:100%;min-height:420px;display:flex;align-items:center;justify-content:center}
+  .invite-naipe{position:absolute;width:62%;max-width:240px;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(11,27,45,.18);transition:transform .3s}
+  .invite-naipe img{width:100%;height:100%;object-fit:cover;display:block}
+  .invite-naipe-back{transform:rotate(-6deg) translate(-28px, 10px);z-index:1}
+  .invite-naipe-front{transform:rotate(5deg) translate(28px, -10px);z-index:2}
+  .invite-naipes:hover .invite-naipe-back{transform:rotate(-9deg) translate(-34px, 14px)}
+  .invite-naipes:hover .invite-naipe-front{transform:rotate(7deg) translate(34px, -14px)}
+
+  @media (max-width:980px){
+    .invite-layout{grid-template-columns:1fr;gap:40px}
+    .invite-naipes{min-height:300px}
+    .invite-naipe{width:54%;max-width:180px}
+    .invite-naipe-back{transform:rotate(-6deg) translate(-22px, 8px)}
+    .invite-naipe-front{transform:rotate(5deg) translate(22px, -8px)}
+    .invite-share-desktop{display:none}
+    .invite-share-mobile{display:flex}
+  }
   .cta-final{position:relative;overflow:hidden;background:radial-gradient(120% 120% at 50% 0%, var(--navy-mid) 0%, var(--navy) 55%, var(--navy-deep) 100%);padding:96px 60px;text-align:center}
   .cta-final-inner{max-width:680px;margin:0 auto}
   .cta-final h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(32px,4.6vw,64px);line-height:1.05;color:#fff;margin-bottom:18px;letter-spacing:-.01em}
@@ -196,21 +225,22 @@
   @media (max-width:980px){
     .wrap{padding-left:32px;padding-right:32px}
     .nav{padding:20px 24px}
+    .nav-logo-name{font-size:18px}
     .nav-links{position:fixed;top:0;right:0;height:100vh;width:78%;max-width:320px;background:var(--navy-deep);flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px;padding:84px 28px 28px;transform:translateX(100%);transition:transform .3s ease;z-index:15}
     .nav-links.open{transform:translateX(0)}
     .nav-link{width:100%;padding:12px 0;font-size:16px;border-bottom:1px solid rgba(255,255,255,.08)}
     .nav-cta{width:100%;text-align:center;margin-top:14px}
-    .nav-burger{display:block}
+    .nav-burger{display:block;position:relative;z-index:20}
     .nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10}
     .nav-overlay.open{display:block}
 
-    .hero-grid{grid-template-columns:1fr;padding:0 24px 200px;gap:56px}
-    .device{padding:10px 0 0;margin-top:8px}
+    .hero-grid{grid-template-columns:1fr;padding:0 24px 60px;gap:56px}
+    .device{padding:10px 0 80px;margin-top:8px}
     .tv{width:100%;margin-left:0}
-    .phone{width:88px;left:-4px;bottom:-20px}
+    .phone{width:88px;left:-4px;bottom:30px}
     .chip-1{left:-12px;top:-26px;width:96px}
-    .chip-2{right:-10px;bottom:24px;width:88px}
-    .chip-3{left:34%;bottom:-22px;width:96px}
+    .chip-2{right:-10px;bottom:80px;width:88px}
+    .chip-3{left:34%;bottom:20px;width:96px}
 
     .section{padding:64px 24px}
     .steps{grid-template-columns:1fr;gap:18px}
@@ -244,17 +274,21 @@
   <div class="sparkles" id="sparkles"></div>
 
   <div class="nav">
-    <a href="#top" class="nav-logo"><img src="assets/ivent-logo-light.svg" alt="iVent"></a>
+    <a href="#top" class="nav-logo">
+      <img src="assets/ivent-logo-light.svg" alt="iVent">
+      <span class="nav-logo-name">iVent</span>
+    </a>
     <button class="nav-burger" id="navBurger" aria-label="Abrir menú">
       <span></span><span></span><span></span>
     </button>
     <div class="nav-links" id="navLinks">
+      <a href="https://www.eventosytech.com/ivent/app/" class="nav-link">Login</a>
       <a href="#liveboard" class="nav-link">Liveboard</a>
       <a href="#invitaciones" class="nav-link">Invitaciones</a>
       <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20iVent%20para%20mi%20evento" target="_blank" rel="noopener" class="nav-cta">Contáctanos</a>
     </div>
+    <div class="nav-overlay" id="navOverlay"></div>
   </div>
-  <div class="nav-overlay" id="navOverlay"></div>
 
   <div class="hero-grid">
     <div>
@@ -339,7 +373,7 @@
       <div class="step-card">
         <div class="step-num">1</div>
         <h3>Escanea el QR</h3>
-        <p>Cada mesa tiene un código. El invitado lo escanea con su cámara — sin instalar nada.</p>
+        <p>Escanea el QR que aparece en pantalla o en la invitación y ve al módulo Sube tu foto.</p>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
@@ -385,27 +419,39 @@
 
 <!-- ===================== INVITACIONES ===================== -->
 <div class="section section-ivory" id="invitaciones">
-  <div class="wrap two-col reverse">
-    <div class="invite-card">
-      <div class="invite-inner">
-        <div class="invite-eyebrow">Nos casamos</div>
-        <div class="invite-names">Ana &amp; Luis</div>
-        <div class="invite-divider"></div>
-        <div class="invite-date">Sábado 14 de Diciembre, 2026</div>
-        <div class="invite-venue">Hacienda San Ángel · 7:00 pm</div>
-        <div class="invite-rsvp">Confirmar asistencia</div>
-      </div>
-    </div>
-    <div>
+  <div class="wrap">
+    <div class="section-head">
       <div class="section-eyebrow">Invitaciones</div>
-      <h2 class="section-h2">Una invitación digital a la altura de tu evento.</h2>
-      <p class="section-lead" style="margin:0 0 30px;max-width:440px;text-align:left;color:var(--body-light)">Diseña tu invitación, mándala por WhatsApp y recibe confirmaciones — todo en el mismo link que después abre el liveboard.</p>
-      <div class="check-list">
-        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Plantillas elegantes, editables a tu estilo</div>
-        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Confirmación de asistencia (RSVP) integrada</div>
-        <div class="check-row on-light"><span class="check-circle on-light">✓</span> Un solo link: invitación, fotos y liveboard</div>
+      <h2 class="section-h2">Diseña tu propia invitación<br>y <em>compártela.</em></h2>
+    </div>
+    <div class="invite-layout">
+      <!-- Izquierda: naipes -->
+      <div class="invite-naipes">
+        <div class="invite-naipe invite-naipe-back">
+          <img src="assets/invite-graduacion.png" alt="Invitación de graduación">
+        </div>
+        <div class="invite-naipe invite-naipe-front">
+          <img src="assets/invite-boda.png" alt="Invitación de boda">
+        </div>
       </div>
-      <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20invitaciones%20digitales%20de%20iVent" target="_blank" rel="noopener" class="btn-pill-navy">Contáctanos</a>
+      <!-- Centro: bullets + CTA -->
+      <div class="invite-copy">
+        <div class="check-list">
+          <div class="check-row on-light"><span class="check-circle on-light">✓</span> Diseñador de invitaciones con diferentes opciones de personalización.</div>
+          <div class="check-row on-light"><span class="check-circle on-light">✓</span> Previsualiza la invitación. Cuando estés listo, genera el QR y URL para tus invitados.</div>
+          <div class="check-row on-light"><span class="check-circle on-light">✓</span> Un solo link: invitación, fotos y liveboard.</div>
+        </div>
+        <div class="invite-share-mobile">
+          <img src="assets/share-modal-screenshot.png" alt="Comparte tu evento">
+          <span class="invite-share-label">Comparte tu evento</span>
+        </div>
+        <a href="https://wa.me/528124665528?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20invitaciones%20digitales%20de%20iVent" target="_blank" rel="noopener" class="btn-pill-navy">Contáctanos</a>
+      </div>
+      <!-- Derecha: share modal (desktop only) -->
+      <div class="invite-share-desktop">
+        <img src="assets/share-modal-screenshot.png" alt="Comparte tu evento">
+        <span class="invite-share-label">Comparte tu evento</span>
+      </div>
     </div>
   </div>
 </div>
