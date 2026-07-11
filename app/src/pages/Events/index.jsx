@@ -1,4 +1,8 @@
 // Página: Events — app/src/pages/Events/index.jsx
+// Razón: Barra "Cómo llegar" ON por default en eventos nuevos (se quitó el override maps_on:false)
+// 2026-07-10 19:06
+// Razón: buildDefaultConfig reusa DEFAULT_FRAMES en vez de duplicarlo; Fotos/Collage activos desde la creación; barra maps sigue la paleta
+// 2026-07-10 19:05
 // Razón: modal de tipo de evento al crear; config default elegante (marino, módulos OFF, maps OFF)
 // 2026-06-25 20:10
 
@@ -7,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import iventLogo from '../../assets/ivent-logo-light.svg'
 import { appEventPath, BRAND as C } from '../../lib/constants'
-import { formatDate, PALETTES, DEFAULT_TYPOGRAPHY } from '../../lib/eventHelpers'
+import { formatDate, PALETTES, DEFAULT_TYPOGRAPHY, DEFAULT_FRAMES } from '../../lib/eventHelpers'
 
 // ─── Paleta default por tipo de evento ───────────────────────────────────
 const PALETTE_BY_SLUG = {
@@ -40,18 +44,14 @@ function buildDefaultConfig(slug) {
   return {
     palette,
     typography: DEFAULT_TYPOGRAPHY,
-    frames: {
-      inv:     { color: palette.kraft,       on: true  },
-      nav:     { color: palette.surface,     on: true  },
-      qr:      { color: palette.surface2,    on: true  },
-      maps_a:  { color: palette.primaryDark },
-      maps_b:  { color: palette.accent      },
-      maps_on: false,   // OFF — se activa cuando el org. pega una URL
-    },
+    // Reusa DEFAULT_FRAMES (fuente única en eventHelpers.js) en vez de duplicar
+    // los defaults acá — antes este objeto vivía desincronizado del resto de la app.
+    // maps_a/maps_b quedan en '' → la barra "Cómo llegar" sigue la paleta del evento.
+    frames: DEFAULT_FRAMES, // maps_on: true por default — el link "Cómo llegar" queda visible aunque aún no haya URL
     modules: {
-      fotos:   false,   // El org. activa uno por uno
-      collage: false,
-      crono:   false,
+      fotos:   true,    // Siempre activo — core del producto
+      collage: true,    // Siempre activo — core del producto
+      crono:   false,   // El org. activa el resto uno por uno
       deseos:  false,
       mesas:   false,
     },

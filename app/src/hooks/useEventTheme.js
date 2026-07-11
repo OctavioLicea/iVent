@@ -1,3 +1,9 @@
+// Archivo: useEventTheme — app/src/hooks/useEventTheme.js
+// Razón: loadGoogleFonts exportada — EventFrontPage.jsx la reusa (no cargaba fuentes)
+// 2026-07-10 19:20
+// Razón: fallback de --maps-color-a/b a la paleta cuando maps_a/maps_b no tienen color propio (antes quedaba en '')
+// 2026-07-10 19:05
+
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
  
@@ -100,9 +106,12 @@ function applyTheme(data) {
   }
  
   // ── Frames / barra maps ─────────────────────────────────────────────────
+  // maps_a/maps_b sin color propio (organizador nunca lo customizó) caen a la paleta.
   const frames = cfg.frames || {}
-  if (frames.maps_a) root.style.setProperty('--maps-color-a', frames.maps_a.color || frames.maps_a)
-  if (frames.maps_b) root.style.setProperty('--maps-color-b', frames.maps_b.color || frames.maps_b)
+  const mapsA = frames.maps_a?.color || frames.maps_a || palette.primary
+  const mapsB = frames.maps_b?.color || frames.maps_b || palette.accent
+  if (mapsA) root.style.setProperty('--maps-color-a', mapsA)
+  if (mapsB) root.style.setProperty('--maps-color-b', mapsB)
 }
  
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -119,9 +128,11 @@ function hexWithAlpha(hex, alpha) {
 }
  
 /**
- * Carga las Google Fonts que usa el evento (sin duplicar si ya están cargadas)
+ * Carga las Google Fonts que usa el evento (sin duplicar si ya están cargadas).
+ * Exportada porque EventFrontPage.jsx también la necesita — es la única página
+ * del invitado que no pasa por useEventTheme (hace su propio fetch a Supabase).
  */
-function loadGoogleFonts(typo) {
+export function loadGoogleFonts(typo) {
   const FONT_MAP = {
     // Scripts
     'Great Vibes':          'Great+Vibes',

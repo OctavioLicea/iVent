@@ -1,4 +1,8 @@
 // Página: EventDesigner — app/src/pages/EventDesigner/index.jsx
+// Razón: Barra "Cómo llegar" sigue la paleta activa por default (con botón ↺ para revertir tras un color manual)
+// 2026-07-10 19:05
+// Razón: Fotos/Collage bloqueados siempre activos; "Ver portada" avisa si hay cambios sin guardar; defaults de Frames actualizados; fix hasSavedRef no persistía entre renders
+// 2026-07-10 18:42
 // Razón: fix color muestra tipografía; discard evento nuevo; highlight hover; label Configuración
 // Razón: AnimatedBg en preview; paletteVars en ed-app para color-mix en thumbnails
 // 2026-06-26 12:00
@@ -36,8 +40,11 @@ export default function EventDesigner() {
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
   const isNewEvent  = searchParams.get('new') === '1'
-  const hasSavedRef = { current: false }
+  const hasSavedRef = useRef(false) // fix: antes era un objeto literal recreado en cada render, nunca conservaba `true`
+  const loadedRef = useRef(false)
   const [showDiscardModal, setShowDiscardModal] = useState(false)
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedMsg, setSavedMsg] = useState(false)
   const [activeSection, setActiveSection] = useState('identidad')
@@ -145,6 +152,10 @@ export default function EventDesigner() {
               merged[k] = { active: v.active !== false, label: v.label || merged[k].label }
             }
           })
+          // Fotos y Collage son el core del producto — siempre activos,
+          // aunque el evento se haya guardado antes con alguno desactivado.
+          if (merged.fotos)   merged.fotos   = { ...merged.fotos,   active: true }
+          if (merged.collage) merged.collage = { ...merged.collage, active: true }
           return merged
         })
       }
@@ -173,6 +184,23 @@ export default function EventDesigner() {
     }
     load()
   }, [eventId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── DIRTY TRACKING ──
+  // Marca loadedRef=true una vez que termina la carga inicial, para no confundir
+  // el llenado de datos desde Supabase con una edición real del usuario.
+  useEffect(() => {
+    if (!loading) loadedRef.current = true
+  }, [loading])
+
+  // Cualquier cambio en el estado editable, después de cargado, marca dirty=true.
+  // Se usa para avisar en "Ver portada" que la versión publicada puede estar desactualizada.
+  useEffect(() => {
+    if (loadedRef.current) setDirty(true)
+  }, [
+    names, subtitle, venue, mapsUrl, date, time,
+    paletteKey, customPalette, typography, modules, frames,
+    images, logoOn, invFit, invSize, selectedBg,
+  ])
 
   // ── IMAGE UPLOAD ──
   async function handleImgUpload(e, type) {
@@ -221,6 +249,13 @@ export default function EventDesigner() {
       ? customPalette
       : { primary: PALETTES[paletteKey].primary, accent: PALETTES[paletteKey].accent, surface: PALETTES[paletteKey].kraft, ink: PALETTES[paletteKey].ink }
 
+    // Fotos y Collage nunca se guardan como inactivos, sin importar el estado local.
+    const finalModules = {
+      ...modules,
+      ...(modules.fotos   ? { fotos:   { ...modules.fotos,   active: true } } : {}),
+      ...(modules.collage ? { collage: { ...modules.collage, active: true } } : {}),
+    }
+
     const payload = {
       name: names.trim() || 'Sin nombre',
       title: names.trim() || null,
@@ -233,7 +268,7 @@ export default function EventDesigner() {
       config: {
         palette: finalPalette,
         typography,
-        modules,
+        modules: finalModules,
         inv_fit: invFit,
         inv_size: invSize,
         frames,
@@ -243,15 +278,36 @@ export default function EventDesigner() {
 
     const { error } = await supabase.from('events').update(payload).eq('id', eventId)
     setSaving(false)
-    if (error) { alert('Error al guardar: ' + error.message); return }
+    if (error) { alert('Error al guardar: ' + error.message); return false }
     hasSavedRef.current = true
+    setDirty(false)
     setSavedMsg(true)
     setTimeout(() => setSavedMsg(false), 2500)
+    return true
   }
 
   async function handleDiscard() {
     await supabase.from('events').delete().eq('id', eventId)
     navigate('/events')
+  }
+
+  // ── VER PORTADA ──
+  // La portada pública siempre lee de Supabase, así que si hay cambios sin guardar
+  // en el designer, abrirla de frente mostraría una versión desactualizada.
+  function handleViewFrontpage() {
+    if (dirty) { setShowUnsavedModal(true); return }
+    window.open(appEventPath(eventId), '_blank')
+  }
+
+  async function handleSaveAndView() {
+    const ok = await handleSave()
+    setShowUnsavedModal(false)
+    if (ok) window.open(appEventPath(eventId), '_blank')
+  }
+
+  function handleViewSavedAnyway() {
+    setShowUnsavedModal(false)
+    window.open(appEventPath(eventId), '_blank')
   }
 
   if (loading) return <div className="ed-loading">Cargando…</div>
@@ -284,8 +340,9 @@ export default function EventDesigner() {
     '--frame-inv': frames.inv.color,
     '--frame-nav': frames.nav.color,
     '--frame-qr': frames.qr.color,
-    '--frame-maps-a': frames.maps_a.color,
-    '--frame-maps-b': frames.maps_b.color,
+    // Sin color manual (color === '') → sigue la paleta activa, igual que en resolveFrames
+    '--frame-maps-a': frames.maps_a.color || palette.primaryDark,
+    '--frame-maps-b': frames.maps_b.color || palette.accent,
     '--maps-bar-font': `'${typography.display.font}'`,
   }
 
@@ -310,6 +367,7 @@ export default function EventDesigner() {
   }
 
   function toggleModule(key, active) {
+    if (key === 'fotos' || key === 'collage') return // siempre activos, no se pueden apagar
     setModules(prev => ({ ...prev, [key]: { ...prev[key], active } }))
   }
   function updateModuleLabel(key, label) {
@@ -328,9 +386,9 @@ export default function EventDesigner() {
         <button className="ed-btn-save" onClick={handleSave} disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar cambios'}
         </button>
-        <a className="ed-btn-frontpage" href={appEventPath(eventId)} target="_blank" rel="noreferrer">
+        <button className="ed-btn-frontpage" onClick={handleViewFrontpage}>
           ⛶ Ver portada
-        </a>
+        </button>
         <div className="ed-user-chip">
           <div className="ed-user-avatar">{userEmail.substring(0, 2).toUpperCase()}</div>
           <span className="ed-user-email">{userEmail}</span>
@@ -573,6 +631,7 @@ export default function EventDesigner() {
               <div className="ed-module-list">
                 {MODULE_DEFS.map(d => {
                   const m = modules[d.key]
+                  const locked = d.key === 'fotos' || d.key === 'collage'
                   return (
                     <div key={d.key} className="ed-module-row">
                       <div className="ed-module-icon">{d.icon}</div>
@@ -580,10 +639,16 @@ export default function EventDesigner() {
                         <div className="ed-module-name">{d.name}</div>
                         <input className="ed-module-input" value={m.label} onChange={e => updateModuleLabel(d.key, e.target.value)} />
                       </div>
-                      <label className="ed-toggle">
-                        <input type="checkbox" checked={m.active} onChange={e => toggleModule(d.key, e.target.checked)} />
-                        <div className="ed-toggle-track" /><div className="ed-toggle-thumb" />
-                      </label>
+                      {locked ? (
+                        <span style={{ fontSize: 11, color: 'var(--ed-ink-mute)', fontFamily: "'DM Sans',sans-serif", whiteSpace: 'nowrap' }}>
+                          Siempre activo
+                        </span>
+                      ) : (
+                        <label className="ed-toggle">
+                          <input type="checkbox" checked={m.active} onChange={e => toggleModule(d.key, e.target.checked)} />
+                          <div className="ed-toggle-track" /><div className="ed-toggle-thumb" />
+                        </label>
+                      )}
                     </div>
                   )
                 })}
@@ -609,14 +674,27 @@ export default function EventDesigner() {
                 <div className="ed-frame-row">
                   <span className="ed-frame-label">📍 Barra Cómo llegar</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                    <input type="color" className="ed-frame-color" value={frames.maps_a.color} onChange={e => setFrames(prev => ({ ...prev, maps_a: { color: e.target.value } }))} />
+                    <input type="color" className="ed-frame-color" value={frames.maps_a.color || palette.primaryDark} onChange={e => setFrames(prev => ({ ...prev, maps_a: { color: e.target.value } }))} />
                     <span style={{ fontSize: 9, color: 'var(--ed-ink-mute)' }}>→</span>
-                    <input type="color" className="ed-frame-color" value={frames.maps_b.color} onChange={e => setFrames(prev => ({ ...prev, maps_b: { color: e.target.value } }))} />
+                    <input type="color" className="ed-frame-color" value={frames.maps_b.color || palette.accent} onChange={e => setFrames(prev => ({ ...prev, maps_b: { color: e.target.value } }))} />
+                    {(frames.maps_a.color || frames.maps_b.color) && (
+                      <button
+                        type="button"
+                        title="Volver a seguir la paleta"
+                        onClick={() => setFrames(prev => ({ ...prev, maps_a: { color: '' }, maps_b: { color: '' } }))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--ed-ink-mute)', padding: '0 2px' }}
+                      >
+                        ↺
+                      </button>
+                    )}
                   </div>
                   <label className="ed-toggle" style={{ marginLeft: 8 }}>
                     <input type="checkbox" checked={frames.maps_on} onChange={e => setFrames(prev => ({ ...prev, maps_on: e.target.checked }))} />
                     <div className="ed-toggle-track" /><div className="ed-toggle-thumb" />
                   </label>
+                </div>
+                <div className="ed-sub" style={{ marginTop: -4 }}>
+                  Sin color manual, la barra sigue automáticamente los colores de tu paleta.
                 </div>
               </div>
             </div>
@@ -722,6 +800,51 @@ export default function EventDesigner() {
                 style={{ background:'#C0392B', border:'none', borderRadius:8, padding:'10px 20px', fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#fff', fontWeight:500 }}
               >
                 Sí, descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal cambios sin guardar (Ver portada) ── */}
+      {showUnsavedModal && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:300,
+          background:'rgba(6,17,29,0.65)',
+          display:'flex', alignItems:'center', justifyContent:'center', padding:24,
+        }}>
+          <div style={{
+            background:'#fff', borderRadius:16, padding:'28px 24px',
+            width:'100%', maxWidth:380,
+            boxShadow:'0 24px 60px rgba(0,0,0,0.25)',
+            textAlign:'center',
+          }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>⛶</div>
+            <h3 style={{ fontFamily:"'Tenor Sans',sans-serif", fontSize:18, fontWeight:400, color:'#0F1E35', marginBottom:8 }}>
+              Tienes cambios sin guardar
+            </h3>
+            <p style={{ fontSize:13, color:'#8A837A', marginBottom:24, lineHeight:1.6 }}>
+              La portada pública muestra la última versión guardada, no el preview actual.
+            </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              <button
+                onClick={handleSaveAndView}
+                disabled={saving}
+                style={{ background:'#0F1E35', border:'none', borderRadius:8, padding:'10px 20px', fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#fff', fontWeight:500 }}
+              >
+                {saving ? 'Guardando…' : 'Guardar y ver portada'}
+              </button>
+              <button
+                onClick={handleViewSavedAnyway}
+                style={{ background:'none', border:'1px solid #E0E0E0', borderRadius:8, padding:'10px 20px', fontSize:13, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#4A4540' }}
+              >
+                Ver versión guardada de todos modos
+              </button>
+              <button
+                onClick={() => setShowUnsavedModal(false)}
+                style={{ background:'none', border:'none', padding:'6px', fontSize:12, fontFamily:"'DM Sans',sans-serif", cursor:'pointer', color:'#8A837A' }}
+              >
+                Cancelar
               </button>
             </div>
           </div>

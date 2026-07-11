@@ -1,4 +1,8 @@
 // Archivo: eventHelpers — app/src/lib/eventHelpers.js
+// Razón: Barra "Cómo llegar" (maps_a/maps_b) ahora deriva su color de la paleta activa por default, en vez de un hex fijo — mismo patrón que defaultTypoColor
+// 2026-07-10 19:05
+// Razón: DEFAULT_FRAMES — Invitación/Opciones de menú/QR apagados por default, Barra Cómo llegar prendida
+// 2026-07-10 18:42
 // Razón: fondos animados y acuarela usan color-mix() con CSS variables de paleta (sin hardcode)
 // 2026-06-26 20:21
 // Razón: fondos animados y acuarela usan color-mix() con CSS variables de paleta (sin hardcode)
@@ -30,12 +34,15 @@ export const DEFAULT_TYPOGRAPHY = {
   label:   { font: 'Cormorant Garamond',  size: 12, bold: true,  color: '' },
 }
 
+// maps_a/maps_b: color '' significa "sigue la paleta activa" (mismo patrón que
+// typography[role].color === '' en defaultTypoColor). Solo se guarda un hex literal
+// cuando el organizador elige un color manualmente en el picker.
 export const DEFAULT_FRAMES = {
-  inv:     { color: '#EDE0CB', on: true },
-  nav:     { color: '#FAF7F2', on: true },
-  qr:      { color: '#F2EBE0', on: true },
-  maps_a:  { color: '#1B2C4E' },
-  maps_b:  { color: '#C4973A' },
+  inv:     { color: '#EDE0CB', on: false },
+  nav:     { color: '#FAF7F2', on: false },
+  qr:      { color: '#F2EBE0', on: false },
+  maps_a:  { color: '' },
+  maps_b:  { color: '' },
   maps_on: true,
 }
 
@@ -196,17 +203,21 @@ export function resolveTypography(cfg) {
   return merged
 }
 
-export function resolveFrames(cfg) {
+// `palette` (resuelto vía resolvePalette) se usa como fallback de maps_a/maps_b
+// cuando el organizador nunca eligió un color manual para la barra "Cómo llegar".
+export function resolveFrames(cfg, palette) {
   const fm = cfg?.frames
-  if (!fm) return DEFAULT_FRAMES
   const getColor = v => typeof v === 'object' ? v.color : v
   const getOn    = v => typeof v === 'object' ? (v.on !== false) : true
+  const mapsA = (fm?.maps_a && getColor(fm.maps_a)) || palette?.primaryDark || '#1B2C4E'
+  const mapsB = (fm?.maps_b && getColor(fm.maps_b)) || palette?.accent     || '#C4973A'
+  if (!fm) return { ...DEFAULT_FRAMES, maps_a: { color: mapsA }, maps_b: { color: mapsB } }
   return {
-    inv:     fm.inv     ? { color: getColor(fm.inv),     on: getOn(fm.inv)     } : DEFAULT_FRAMES.inv,
-    nav:     fm.nav     ? { color: getColor(fm.nav),     on: getOn(fm.nav)     } : DEFAULT_FRAMES.nav,
-    qr:      fm.qr      ? { color: getColor(fm.qr),      on: getOn(fm.qr)      } : DEFAULT_FRAMES.qr,
-    maps_a:  fm.maps_a  ? { color: getColor(fm.maps_a)  }                        : DEFAULT_FRAMES.maps_a,
-    maps_b:  fm.maps_b  ? { color: getColor(fm.maps_b)  }                        : DEFAULT_FRAMES.maps_b,
+    inv:     fm.inv ? { color: getColor(fm.inv), on: getOn(fm.inv) } : DEFAULT_FRAMES.inv,
+    nav:     fm.nav ? { color: getColor(fm.nav), on: getOn(fm.nav) } : DEFAULT_FRAMES.nav,
+    qr:      fm.qr  ? { color: getColor(fm.qr),  on: getOn(fm.qr)  } : DEFAULT_FRAMES.qr,
+    maps_a:  { color: mapsA },
+    maps_b:  { color: mapsB },
     maps_on: fm.maps_on !== false,
   }
 }

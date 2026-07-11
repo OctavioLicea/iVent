@@ -1,4 +1,10 @@
 // Página: EventFrontPage — app/src/pages/EventFrontPage.jsx
+// Razón: cargaba tipografía sin inyectar el <link> de Google Fonts — caía al serif del sistema. Reusa loadGoogleFonts de useEventTheme.js
+// 2026-07-10 19:20
+// Razón: resolveFrames recibe palette para que la barra "Cómo llegar" derive su color de la paleta activa
+// 2026-07-10 19:05
+// Razón: Fotos y Collage forzados siempre activos, ignorando config.modules guardado
+// 2026-07-10 18:42
 // Razón: AnimatedBg para fondos animados con sparks derivados de paleta
 // 2026-06-26 12:00
 
@@ -11,6 +17,7 @@ import {
   formatDate, formatTime, hexToRgb, darken, lighten, customPaletteToColors,
   defaultTypoColor, resolvePalette, resolveTypography, resolveFrames,
 } from "../lib/eventHelpers"
+import { loadGoogleFonts } from "../hooks/useEventTheme"
 import LoadingScreen from "../components/LoadingScreen"
 import ErrorScreen from "../components/ErrorScreen"
 import AnimatedBg from "../components/AnimatedBg"
@@ -52,9 +59,13 @@ export default function EventFrontPage() {
     }
 
     setEvent(data)
+    loadGoogleFonts(resolveTypography(data.config)) // sin esto, la portada cae al serif del sistema
 
     const modules = data.config?.modules || {}
     const active = MODULE_DEFS.filter((m) => {
+      // Fotos y Collage son el core del producto — siempre visibles para el invitado,
+      // sin importar lo que diga config.modules (incluso en eventos ya guardados).
+      if (m.key === 'fotos' || m.key === 'collage') return true
       const mod = modules[m.key]
       return mod === true || mod?.active === true
     })
@@ -80,7 +91,7 @@ export default function EventFrontPage() {
 
   const palette    = resolvePalette(config)
   const typography = resolveTypography(config)
-  const frames     = resolveFrames(config)
+  const frames     = resolveFrames(config, palette)
   const invFit     = config?.inv_fit || 'contain'
   const invSize    = config?.inv_size || 140
 
